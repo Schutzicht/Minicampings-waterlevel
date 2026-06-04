@@ -1,0 +1,25 @@
+{
+  "name": "peil-watermonitoring",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev --port 4377",
+    "start": "astro dev --port 4377",
+    "build": "astro build",
+    "preview": "astro preview --port 4377",
+    "generate:images": "node scripts/generate-images.mjs"
+  },
+  "dependencies": {
+    "astro": "^6.0.0",
+    "lenis": "^1.1.18"
+  },
+  "devDependencies": {
+    "@google/genai": "^2.8.0",
+    "@tailwindcss/vite": "^4.1.7",
+    "dotenv": "^17.4.2",
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5.7.3",
+    "vite": "^7.3.2"
+  }
+}

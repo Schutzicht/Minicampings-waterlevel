@@ -1,0 +1,294 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Icon from '../components/Icon.astro';
+---
+<AppLayout
+  active="invoer"
+  eyebrow="Wekelijkse registratie"
+  title="Waterstand invoeren"
+  subtitle="Noteer per week de meterstand, het aantal bezoekers en de bezetting. Peil rekent het verbruik en het verbruik per gast direct voor je uit."
+>
+  <div class="grid gap-4 lg:grid-cols-5">
+    <!-- Formulier -->
+    <form id="invoerForm" class="card reveal p-5 sm:p-6 lg:col-span-3">
+      <div class="grid gap-5 sm:grid-cols-2">
+        <label class="block sm:col-span-2">
+          <span class="mb-1.5 block text-sm font-semibold text-deep">Camping</span>
+          <select id="f-camping" class="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-medium text-ink"></select>
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 block text-sm font-semibold text-deep">Week</span>
+          <select id="f-week" class="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-medium text-ink"></select>
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 flex items-center justify-between text-sm font-semibold text-deep">
+            Meterstand <span class="text-xs font-medium text-faint">m³</span>
+          </span>
+          <input id="f-meter" type="number" inputmode="decimal" step="0.1" min="0" placeholder="0,0"
+            class="tnum w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
+          <span id="f-meter-hint" class="mt-1 block text-xs text-faint"></span>
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 flex items-center justify-between text-sm font-semibold text-deep">
+            Aantal bezoekers <Icon name="users" size={15} class="text-faint" />
+          </span>
+          <input id="f-bezoekers" type="number" inputmode="numeric" min="0" placeholder="0"
+            class="tnum w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
+          <span class="mt-1 block text-xs text-faint">Gasten die deze week verbleven.</span>
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 flex items-center justify-between text-sm font-semibold text-deep">
+            Bezetting <span id="f-bez-read" class="tnum text-xs font-bold text-brand"></span>
+          </span>
+          <input id="f-bezetting-range" type="range" min="0" value="0" class="peil-range w-full" />
+          <input id="f-bezetting" type="hidden" />
+          <span id="f-bez-hint" class="mt-1 block text-xs text-faint"></span>
+        </label>
+      </div>
+
+      <div id="f-edit-note" class="mt-5 hidden items-center gap-2 rounded-xl bg-mist px-3.5 py-2.5 text-sm font-medium text-brand">
+        <Icon name="clock" size={16} /> <span></span>
+      </div>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+        <button type="submit" id="f-submit" class="btn btn-primary flex-1 py-2.5">Opslaan</button>
+        <button type="button" id="f-skip" class="btn btn-ghost px-4 py-2.5 text-sm">Volgende open camping</button>
+      </div>
+    </form>
+
+    <!-- Live berekening -->
+    <aside class="card reveal flex flex-col gap-5 bg-deep p-5 text-white sm:p-6 lg:col-span-2" style="background:linear-gradient(160deg,#0b3d49,#082730)">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Live berekend</p>
+        <h2 class="font-display text-lg font-bold">Wat dit betekent</h2>
+      </div>
+
+      <div>
+        <p class="text-sm text-white/60">Verbruik deze week</p>
+        <p class="mt-0.5 flex items-baseline gap-1.5">
+          <span id="calc-verbruik" class="tnum font-display text-[2.6rem] font-extrabold leading-none">–</span>
+          <span class="text-base font-semibold text-white/55">m³</span>
+        </p>
+        <p id="calc-verbruik-note" class="mt-1 text-xs text-white/45"></p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-5">
+        <div>
+          <p class="text-sm text-white/60">Liter per gast</p>
+          <p class="mt-0.5"><span id="calc-lpb" class="tnum font-display text-2xl font-extrabold">–</span><span class="text-sm font-semibold text-white/55"> L</span></p>
+          <p id="calc-lpb-label" class="mt-0.5 text-xs font-semibold text-aqua"></p>
+        </div>
+        <div>
+          <p class="text-sm text-white/60">Bezettingsgraad</p>
+          <p class="mt-0.5"><span id="calc-bez" class="tnum font-display text-2xl font-extrabold">–</span><span class="text-sm font-semibold text-white/55"> %</span></p>
+          <div id="calc-bez-bar" class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/15"><div class="h-full rounded-full bg-aqua" style="width:0%;transition:width .5s ease"></div></div>
+        </div>
+      </div>
+
+      <p class="mt-auto text-xs leading-relaxed text-white/45">
+        Het verbruik is het verschil met de meterstand van vorige week. Liter per gast is een indicatie op basis van de bezoekers die week.
+      </p>
+    </aside>
+  </div>
+
+  <!-- Recente invoer -->
+  <section class="mt-6 reveal">
+    <h2 class="mb-3 font-display text-lg font-bold text-ink">Recent ingevoerd</h2>
+    <div id="recentList" class="card divide-y divide-line"></div>
+  </section>
+</AppLayout>
+
+<style>
+  .peil-range { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 999px; background: var(--color-line-soft); outline: none; }
+  .peil-range::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: var(--color-brand); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(8,39,48,.25); cursor: pointer; }
+  .peil-range::-moz-range-thumb { height: 18px; width: 18px; border-radius: 50%; background: var(--color-brand); border: 3px solid #fff; cursor: pointer; }
+</style>
+
+<script>
+  import {
+    getCampings, getCamping, currentWeek, weekRangeLabel, readingForWeek,
+    previousMeterstand, addOrUpdateReading, currentWeekStatus, load,
+    fmt1, fmtInt,
+  } from '../lib/store';
+  import { effColor, effLabel } from '../lib/ui';
+
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  const campingSel = $<HTMLSelectElement>('f-camping');
+  const weekSel = $<HTMLSelectElement>('f-week');
+  const meterInp = $<HTMLInputElement>('f-meter');
+  const bezoekersInp = $<HTMLInputElement>('f-bezoekers');
+  const bezRange = $<HTMLInputElement>('f-bezetting-range');
+  const bezHidden = $<HTMLInputElement>('f-bezetting');
+
+  const { year } = currentWeek();
+
+  // camping-opties
+  const campings = getCampings();
+  campingSel.innerHTML = campings.map((c) => `<option value="${c.slug}">${c.naam} · ${c.plaats}</option>`).join('');
+
+  // week-opties: huidige week + 7 ervoor
+  const cur = currentWeek().week;
+  const weeks = Array.from({ length: 8 }, (_, i) => cur - i).filter((w) => w >= 1);
+  weekSel.innerHTML = weeks
+    .map((w, i) => `<option value="${w}">Week ${w} · ${weekRangeLabel(year, w)}${i === 0 ? ' (deze week)' : ''}</option>`)
+    .join('');
+
+  // preselect via ?camping=
+  const params = new URLSearchParams(location.search);
+  const pre = params.get('camping');
+  if (pre && campings.some((c) => c.slug === pre)) campingSel.value = pre;
+
+  function selectedCamping() {
+    return getCamping(campingSel.value)!;
+  }
+
+  function syncFormFromState() {
+    const c = selectedCamping();
+    const week = Number(weekSel.value);
+    bezRange.max = String(c.pitches);
+    const existing = readingForWeek(c.id, year, week);
+    const prev = previousMeterstand(c.id, year, week);
+
+    $('f-meter-hint').textContent = `Vorige stand: ${fmt1(prev)} m³`;
+    $<HTMLElement>('f-bez-hint').textContent = `0 t/m ${c.pitches} plekken`;
+
+    const note = $('f-edit-note');
+    if (existing) {
+      meterInp.value = String(existing.meterstand);
+      bezoekersInp.value = String(existing.bezoekers);
+      bezRange.value = String(existing.bezetting);
+      $('f-submit').textContent = 'Bijwerken';
+      note.classList.remove('hidden');
+      note.classList.add('flex');
+      note.querySelector('span')!.textContent = `Week ${week} is al ingevuld (${existing.bron === 'homewizard' ? 'HomeWizard' : 'handmatig'}). Aanpassen kan.`;
+    } else {
+      meterInp.value = '';
+      meterInp.placeholder = fmt1(prev);
+      bezoekersInp.value = '';
+      bezRange.value = '0';
+      $('f-submit').textContent = 'Opslaan';
+      note.classList.add('hidden');
+      note.classList.remove('flex');
+    }
+    syncBezReadout();
+    recalc();
+  }
+
+  function syncBezReadout() {
+    const c = selectedCamping();
+    bezHidden.value = bezRange.value;
+    $('f-bez-read').textContent = `${bezRange.value} / ${c.pitches} plekken`;
+  }
+
+  function recalc() {
+    const c = selectedCamping();
+    const week = Number(weekSel.value);
+    const prev = previousMeterstand(c.id, year, week);
+    const meter = parseFloat(meterInp.value.replace(',', '.'));
+    const bezoekers = parseInt(bezoekersInp.value || '0', 10);
+    const bezetting = parseInt(bezRange.value || '0', 10);
+
+    const hasMeter = !isNaN(meter);
+    const verbruik = hasMeter ? Math.round((meter - prev) * 10) / 10 : null;
+
+    const vEl = $('calc-verbruik');
+    const vNote = $('calc-verbruik-note');
+    if (verbruik === null) {
+      vEl.textContent = '–';
+      vNote.textContent = 'Vul de meterstand in.';
+      vEl.style.color = '';
+    } else if (verbruik < 0) {
+      vEl.textContent = fmt1(verbruik);
+      vEl.style.color = '#ffb4ab';
+      vNote.textContent = 'Let op: lager dan vorige stand. Klopt de meterstand?';
+    } else {
+      vEl.textContent = fmt1(verbruik);
+      vEl.style.color = '';
+      vNote.textContent = `Verschil met vorige stand (${fmt1(prev)} m³).`;
+    }
+
+    const lpb = verbruik !== null && verbruik > 0 && bezoekers > 0 ? (verbruik * 1000) / bezoekers : 0;
+    $('calc-lpb').textContent = lpb > 0 ? fmtInt(lpb) : '–';
+    const lpbLabel = $('calc-lpb-label');
+    lpbLabel.textContent = lpb > 0 ? effLabel(lpb) : '';
+    lpbLabel.style.color = lpb > 0 ? effColor(lpb) : '';
+
+    const bezPct = c.pitches ? Math.round((bezetting / c.pitches) * 100) : 0;
+    $('calc-bez').textContent = String(bezPct);
+    const bar = $('calc-bez-bar').firstElementChild as HTMLElement;
+    bar.style.width = `${bezPct}%`;
+  }
+
+  function nextOpen(excludeSlug?: string) {
+    const open = currentWeekStatus().open.filter((s) => s.camping.slug !== excludeSlug);
+    return open[0]?.camping.slug;
+  }
+
+  // recente invoer
+  function renderRecent() {
+    const list = $('recentList');
+    const readings = [...load().readings]
+      .sort((a, b) => (b.jaar - a.jaar) || (b.week - a.week) || b.datum.localeCompare(a.datum))
+      .slice(0, 6);
+    const nameOf = (id: string) => getCamping(id)?.naam ?? id;
+    list.innerHTML = readings.map((r) => {
+      const prev = (() => {
+        const all = load().readings.filter((x) => x.campingId === r.campingId && (x.jaar < r.jaar || (x.jaar === r.jaar && x.week < r.week)));
+        all.sort((a, b) => a.jaar - b.jaar || a.week - b.week);
+        return all.length ? all[all.length - 1].meterstand : getCamping(r.campingId)!.meterStart;
+      })();
+      const verbruik = Math.max(0, Math.round((r.meterstand - prev) * 10) / 10);
+      return `<div class="flex items-center justify-between gap-3 px-4 py-3">
+        <div class="min-w-0">
+          <p class="truncate text-sm font-semibold text-deep">${nameOf(r.campingId)}</p>
+          <p class="text-xs text-faint">Week ${r.week} · ${weekRangeLabel(r.jaar, r.week)}</p>
+        </div>
+        <div class="flex items-center gap-4 text-right">
+          <div><p class="tnum text-sm font-bold text-deep">${fmt1(verbruik)}<span class="text-[0.65rem] font-medium text-faint"> m³</span></p><p class="text-[0.65rem] text-faint">${fmtInt(r.bezoekers)} gasten</p></div>
+          <span class="chip ${r.bron === 'homewizard' ? 'bg-mist text-brand' : 'bg-line-soft text-muted'}">${r.bron === 'homewizard' ? 'HomeWizard' : 'Handmatig'}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // events
+  campingSel.addEventListener('change', syncFormFromState);
+  weekSel.addEventListener('change', syncFormFromState);
+  meterInp.addEventListener('input', recalc);
+  bezoekersInp.addEventListener('input', recalc);
+  bezRange.addEventListener('input', () => { syncBezReadout(); recalc(); });
+
+  $('invoerForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const c = selectedCamping();
+    const week = Number(weekSel.value);
+    const meter = parseFloat(meterInp.value.replace(',', '.'));
+    const bezoekers = parseInt(bezoekersInp.value || '0', 10);
+    const bezetting = parseInt(bezRange.value || '0', 10);
+    if (isNaN(meter) || meter <= 0) { meterInp.focus(); (window as any).peilToast?.('Vul een meterstand in'); return; }
+
+    addOrUpdateReading({ campingId: c.id, jaar: year, week, meterstand: meter, bezoekers, bezetting, bron: 'handmatig' });
+    (window as any).peilToast?.(`Opgeslagen voor ${c.naam.replace('Minicamping ', '')}`);
+    renderRecent();
+
+    // ga door naar de volgende open camping van deze week
+    const next = nextOpen(c.slug);
+    if (next && week === cur) { campingSel.value = next; }
+    syncFormFromState();
+  });
+
+  $('f-skip').addEventListener('click', () => {
+    const next = nextOpen(campingSel.value);
+    if (next) { campingSel.value = next; syncFormFromState(); }
+    else (window as any).peilToast?.('Alle campings zijn ingevuld deze week');
+  });
+
+  // init
+  syncFormFromState();
+  renderRecent();
+  window.addEventListener('peil:change', renderRecent);
+</script>

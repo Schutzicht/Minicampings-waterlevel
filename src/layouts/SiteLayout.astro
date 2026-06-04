@@ -1,0 +1,107 @@
+---
+import '../styles/global.css';
+import Logo from '../components/Logo.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title = 'Peil · watermonitoring voor minicampings', description = 'Leg wekelijks de waterstand, bezoekers en bezetting van minicampings in de regio vast. Zie verbruik per gast, vergelijk locaties en koppel straks je HomeWizard.' } = Astro.props;
+
+const links = [
+  { label: 'Het probleem', href: '#probleem' },
+  { label: 'Hoe het werkt', href: '#werkt' },
+  { label: 'Functies', href: '#functies' },
+  { label: 'HomeWizard', href: '#homewizard' },
+];
+---
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen text-ink">
+    <header id="siteNav" class="fixed inset-x-0 top-0 z-50 transition-all duration-300">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
+        <a href="/" aria-label="Peil home"><Logo /></a>
+        <nav class="hidden items-center gap-7 md:flex">
+          {links.map((l) => (
+            <a href={l.href} class="text-sm font-semibold text-muted transition-colors hover:text-brand">{l.label}</a>
+          ))}
+        </nav>
+        <a href="/dashboard" class="btn btn-primary px-4 py-2 text-sm">Open dashboard</a>
+      </div>
+    </header>
+
+    <slot />
+
+    <footer class="border-t border-line bg-white">
+      <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+        <div class="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
+          <div>
+            <Logo />
+            <p class="mt-3 max-w-xs text-sm text-muted">Watermonitoring voor minicampings in de regio. Inzicht in verbruik, week na week.</p>
+          </div>
+          <div class="flex flex-wrap gap-x-10 gap-y-3 text-sm">
+            {links.map((l) => (
+              <a href={l.href} class="font-semibold text-muted hover:text-brand">{l.label}</a>
+            ))}
+            <a href="/dashboard" class="font-semibold text-brand">Dashboard</a>
+          </div>
+        </div>
+        <div class="mt-10 flex flex-col items-center justify-between gap-2 border-t border-line pt-6 text-xs text-faint sm:flex-row">
+          <p>Peil is een demo. Data wordt lokaal in je browser bewaard, nog zonder database.</p>
+          <p>Gebouwd door Agensea</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      import Lenis from 'lenis';
+
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reduce) {
+        const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+        function raf(time: number) {
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+      }
+
+      // Solidify nav on scroll
+      const nav = document.getElementById('siteNav');
+      const onScroll = () => {
+        if (window.scrollY > 16) nav?.classList.add('nav-solid');
+        else nav?.classList.remove('nav-solid');
+      };
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+
+      // Reveal
+      const io = new IntersectionObserver(
+        (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('is-in')),
+        { threshold: 0.12 },
+      );
+      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+    </script>
+
+    <style is:global>
+      #siteNav.nav-solid {
+        background: rgba(243, 247, 248, 0.82);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--color-line);
+      }
+    </style>
+  </body>
+</html>

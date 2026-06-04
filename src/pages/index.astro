@@ -1,0 +1,181 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Icon from '../components/Icon.astro';
+
+const probleem = [
+  { icon: 'clipboard', t: 'Schriftjes en losse Excels', d: 'Iedere camping houdt de meterstand anders bij. Cijfers raken kwijt, weken worden vergeten.' },
+  { icon: 'users', t: 'Geen verband met drukte', d: 'Een hoog verbruik zegt weinig zonder te weten hoeveel gasten er die week waren.' },
+  { icon: 'chart', t: 'Onmogelijk te vergelijken', d: 'Welke locatie is zuinig, welke verbruikt veel? Zonder eenduidige data blijft het gissen.' },
+];
+
+const stappen = [
+  { n: '1', t: 'Invoeren per week', d: 'Noteer de meterstand, het aantal bezoekers en de bezetting. In een halve minuut klaar.' },
+  { n: '2', t: 'Peil rekent uit', d: 'Verbruik, liter per gast en bezettingsgraad worden automatisch berekend.' },
+  { n: '3', t: 'Inzicht en vergelijk', d: 'Zie trends per week en vergelijk alle campings in de regio naast elkaar.' },
+];
+
+const functies = [
+  { icon: 'calendar', t: 'Weekoverzicht', d: 'Verbruik, bezoekers en bezetting per week, in een helder dashboard.' },
+  { icon: 'droplet', t: 'Liter per gast', d: 'De eerlijke maat voor zuinigheid, los van hoe druk het is.' },
+  { icon: 'gauge', t: 'Bezettingsgraad', d: 'Zie hoe vol elke camping zit ten opzichte van het aantal plekken.' },
+  { icon: 'layers', t: 'Vergelijk locaties', d: 'Rangschik campings en spot uitschieters in een oogopslag.' },
+  { icon: 'trend', t: 'Trends per seizoen', d: 'Volg het verloop over de weken en herken pieken rond vakanties.' },
+  { icon: 'homewizard', t: 'HomeWizard-koppeling', d: 'Straks leest Peil de waterstand automatisch uit. Geen overtikken meer.', soon: true },
+];
+---
+<SiteLayout>
+  <!-- Hero -->
+  <section class="relative overflow-hidden pt-28 pb-16 sm:pt-36 lg:pb-24">
+    <div class="pointer-events-none absolute -top-40 right-0 h-[36rem] w-[36rem] rounded-full opacity-50 blur-3xl" style="background:radial-gradient(circle,rgba(24,195,192,.28),transparent 65%)"></div>
+    <div class="pointer-events-none absolute -left-32 top-40 h-96 w-96 rounded-full opacity-40 blur-3xl" style="background:radial-gradient(circle,rgba(56,189,248,.22),transparent 65%)"></div>
+
+    <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <div class="reveal is-in">
+        <span class="chip border border-line bg-white text-brand"><span class="h-1.5 w-1.5 rounded-full bg-aqua"></span>Watermonitoring voor minicampings</span>
+        <h1 class="fluid-hero mt-5 font-extrabold text-ink">
+          Grip op het <span class="text-brand">waterverbruik</span> van campings in de regio
+        </h1>
+        <p class="mt-5 max-w-xl text-lg leading-relaxed text-muted">
+          Leg wekelijks de waterstand, het aantal bezoekers en de bezetting vast. Peil maakt er direct
+          inzicht van: verbruik per gast, trends per week en een vergelijking tussen locaties.
+        </p>
+        <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+          <a href="/dashboard" class="btn btn-primary px-6 py-3 text-base">Open het dashboard <Icon name="right" size={18} /></a>
+          <a href="#werkt" class="btn btn-ghost px-6 py-3 text-base">Hoe het werkt</a>
+        </div>
+        <div class="mt-8 flex items-center gap-3 text-sm text-faint">
+          <div class="flex -space-x-2">
+            {[1, 2, 3].map((i) => (
+              <span class={`h-7 w-7 rounded-full border-2 border-canvas water-grad`} style={`opacity:${1 - i * 0.18}`}></span>
+            ))}
+          </div>
+          Pilot met 6 minicampings in Zeeland
+        </div>
+      </div>
+
+      <!-- Hero visual -->
+      <div class="reveal is-in relative">
+        <div class="relative overflow-hidden rounded-2xl border border-line bg-white shadow-lift">
+          <div class="relative aspect-[5/4] w-full water-grad">
+            <img src="/images/hero-minicamping.png" alt="Minicamping in Zeeland met tenten en caravans tussen het groen" class="absolute inset-0 h-full w-full object-cover" onerror="this.style.display='none'" />
+            <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(8,39,48,0) 50%,rgba(8,39,48,.35))"></div>
+          </div>
+        </div>
+        <!-- floating stat card -->
+        <div class="absolute -bottom-5 -left-3 w-52 rounded-xl border border-line bg-white/95 p-3.5 shadow-lift backdrop-blur sm:-left-6">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-muted">Verbruik per gast</p>
+            <span class="chip bg-good-soft text-good">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V7M6 12l6-6 6 6"/></svg>8%
+            </span>
+          </div>
+          <p class="tnum font-display text-2xl font-extrabold text-ink">312 <span class="text-sm font-semibold text-faint">L</span></p>
+          <svg class="mt-1 w-full" height="34" viewBox="0 0 180 34" preserveAspectRatio="none">
+            <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e7c86" stop-opacity=".22"/><stop offset="100%" stop-color="#0e7c86" stop-opacity="0"/></linearGradient></defs>
+            <path d="M1,26 L26,22 L51,24 L76,15 L101,18 L126,11 L151,13 L179,7 L179,34 L1,34 Z" fill="url(#hg)"/>
+            <polyline points="1,26 26,22 51,24 76,15 101,18 126,11 151,13 179,7" fill="none" stroke="#0e7c86" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="absolute -right-2 -top-4 hidden rounded-xl border border-line bg-white/95 px-3.5 py-2.5 shadow-lift backdrop-blur sm:block">
+          <p class="text-xs font-semibold text-muted">Deze week</p>
+          <p class="tnum font-display text-lg font-extrabold text-ink">6/6 <span class="text-xs font-semibold text-good">ingevuld</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Probleem -->
+  <section id="probleem" class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+    <div class="reveal max-w-2xl">
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Het probleem</p>
+      <h2 class="fluid-h2 mt-2 font-extrabold text-ink">Waterverbruik bijhouden is nu lastig</h2>
+    </div>
+    <div class="mt-10 grid gap-4 md:grid-cols-3">
+      {probleem.map((p, i) => (
+        <div class="card reveal p-6" style={`transition-delay:${i * 80}ms`}>
+          <span class="grid h-11 w-11 place-items-center rounded-xl bg-mist text-brand"><Icon name={p.icon} size={22} /></span>
+          <h3 class="mt-4 font-display text-lg font-bold text-ink">{p.t}</h3>
+          <p class="mt-1.5 text-sm leading-relaxed text-muted">{p.d}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Hoe het werkt -->
+  <section id="werkt" class="bg-white">
+    <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+      <div class="reveal max-w-2xl">
+        <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Zo werkt het</p>
+        <h2 class="fluid-h2 mt-2 font-extrabold text-ink">Van meterstand naar inzicht in drie stappen</h2>
+      </div>
+      <div class="mt-10 grid gap-5 md:grid-cols-3">
+        {stappen.map((s, i) => (
+          <div class="reveal relative" style={`transition-delay:${i * 90}ms`}>
+            <span class="font-display text-5xl font-extrabold text-mist">{s.n}</span>
+            <h3 class="mt-2 font-display text-xl font-bold text-ink">{s.t}</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-muted">{s.d}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Functies -->
+  <section id="functies" class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+    <div class="reveal max-w-2xl">
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Functies</p>
+      <h2 class="fluid-h2 mt-2 font-extrabold text-ink">Alles om water te volgen, op een plek</h2>
+    </div>
+    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {functies.map((f, i) => (
+        <div class="card reveal relative p-6" style={`transition-delay:${i * 70}ms`}>
+          {f.soon && <span class="absolute right-4 top-4 chip bg-warn-soft text-warn">Binnenkort</span>}
+          <span class="grid h-11 w-11 place-items-center rounded-xl water-grad text-white"><Icon name={f.icon} size={21} /></span>
+          <h3 class="mt-4 font-display text-lg font-bold text-ink">{f.t}</h3>
+          <p class="mt-1.5 text-sm leading-relaxed text-muted">{f.d}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- HomeWizard teaser -->
+  <section id="homewizard" class="mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:pb-24">
+    <div class="reveal overflow-hidden rounded-2xl border border-line" style="background:linear-gradient(150deg,#0b3d49,#082730)">
+      <div class="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
+        <div>
+          <span class="chip bg-white/10 text-aqua"><span class="h-1.5 w-1.5 rounded-full bg-aqua"></span>Volgende stap</span>
+          <h2 class="fluid-h2 mt-4 font-extrabold text-white">Straks leest Peil de meter zelf uit</h2>
+          <p class="mt-3 max-w-md leading-relaxed text-white/65">
+            Met een HomeWizard Watermeter wordt de waterstand automatisch ingelezen. Geen overtikken,
+            geen vergeten weken. De ranglijst en grafieken vullen zichzelf.
+          </p>
+          <a href="/homewizard" class="btn mt-6 bg-white px-5 py-2.5 text-deep hover:bg-mist">Bekijk de koppeling <Icon name="right" size={17} /></a>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          {[
+            { k: 'Automatisch', v: 'wekelijks uitgelezen' },
+            { k: '0 fouten', v: 'geen overtypwerk' },
+            { k: 'Per dag', v: 'verbruik inzichtelijk' },
+            { k: 'Bestaande meter', v: 'blijft gewoon zitten' },
+          ].map((s) => (
+            <div class="rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+              <p class="font-display text-base font-bold text-white">{s.k}</p>
+              <p class="mt-0.5 text-xs text-white/55">{s.v}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="bg-white">
+    <div class="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 lg:py-24">
+      <div class="reveal mx-auto max-w-2xl">
+        <h2 class="fluid-h2 font-extrabold text-ink">Klaar om te zien hoe het werkt?</h2>
+        <p class="mt-3 text-muted">Het dashboard staat klaar met voorbeelddata van zes minicampings.</p>
+        <a href="/dashboard" class="btn btn-primary mt-6 px-7 py-3 text-base">Open het dashboard <Icon name="right" size={18} /></a>
+      </div>
+    </div>
+  </section>
+</SiteLayout>

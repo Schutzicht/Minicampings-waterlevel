@@ -1,0 +1,55 @@
+---
+interface Props {
+  name: string;
+  class?: string;
+  size?: number;
+}
+const { name, class: cls = '', size = 20 } = Astro.props;
+
+const paths: Record<string, string> = {
+  dashboard: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  invoer: '<path d="M12 5v14M5 12h14"/>',
+  clipboard: '<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v2H9z"/><path d="M9 11h6M9 15h4"/>',
+  tent: '<path d="M3.5 20 12 4l8.5 16M12 4v16M12 20l-4-7M12 20l4-7"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  trend: '<path d="M3 17l6-6 4 4 7-8"/><path d="M17 7h4v4"/>',
+  homewizard: '<path d="M4 9a12 12 0 0 1 16 0"/><path d="M7 12.5a7.5 7.5 0 0 1 10 0"/><path d="M10 16a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>',
+  droplet: '<path d="M12 3.2c4 4.4 6.5 7.6 6.5 11A6.5 6.5 0 0 1 5.5 14.2c0-3.4 2.5-6.6 6.5-11z"/>',
+  users: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 6"/><path d="M17 14.6a5.5 5.5 0 0 1 3.5 5.1"/>',
+  gauge: '<path d="M12 13l4-4"/><path d="M5.2 17a8 8 0 1 1 13.6 0"/><circle cx="12" cy="13" r="1.4" fill="currentColor" stroke="none"/>',
+  up: '<path d="M12 19V6M6 12l6-6 6 6"/>',
+  down: '<path d="M12 5v13M6 12l6 6 6-6"/>',
+  right: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  check: '<path d="M5 12.5l4.2 4.2L19 7"/>',
+  'check-circle': '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>',
+  download: '<path d="M12 3v12M7 11l5 5 5-5"/><path d="M5 21h14"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  leaf: '<path d="M5 19c0-8 6-13 14-13 0 9-5 14-13 14-1 0-1-1-1-1z"/><path d="M5 19c3-4 6-6 9-7"/>',
+  calendar: '<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/>',
+  euro: '<path d="M16 7a5 5 0 1 0 0 10"/><path d="M5 10h7M5 14h7"/>',
+  spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+  bolt: '<path d="M13 3 5 13h6l-1 8 8-10h-6z"/>',
+  shield: '<path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/>',
+  layers: '<path d="M12 3 3 8l9 5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+  arrowupright: '<path d="M7 17 17 7M9 7h8v8"/>',
+};
+
+const d = paths[name] ?? '';
+const filled = name === 'droplet';
+---
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill={filled ? 'currentColor' : 'none'}
+  stroke="currentColor"
+  stroke-width="1.8"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class={cls}
+  aria-hidden="true"
+  set:html={d}
+/>

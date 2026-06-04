@@ -1,0 +1,161 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Icon from '../components/Icon.astro';
+import { sparkSafeImg } from '../lib/ui';
+
+const steps = [
+  { n: '1', t: 'HomeWizard op de watermeter', d: 'De HomeWizard Watermeter klikt op de bestaande watermeter en meet het verbruik via wifi.' },
+  { n: '2', t: 'Koppel met een token', d: 'De camping koppelt het apparaat eenmalig aan Peil met een beveiligde API-sleutel.' },
+  { n: '3', t: 'Peil leest automatisch uit', d: 'Elke week haalt Peil de meterstand op. Bezoekers en bezetting vul je nog wel zelf aan.' },
+];
+---
+<AppLayout
+  active="homewizard"
+  eyebrow="Toekomstige koppeling"
+  title="HomeWizard-integratie"
+  subtitle="Straks hoeft niemand meer handmatig de meterstand over te tikken. Peil leest de waterstand rechtstreeks uit de HomeWizard Watermeter."
+>
+  <span slot="actions" class="chip bg-warn-soft text-warn"><span class="h-1.5 w-1.5 rounded-full bg-warn"></span>In ontwikkeling</span>
+
+  <!-- Intro -->
+  <section class="grid gap-5 lg:grid-cols-2 lg:items-center reveal">
+    <div class="card overflow-hidden">
+      <div class="relative h-56 w-full overflow-hidden water-grad sm:h-72">
+        <span set:html={sparkSafeImg('/images/homewizard-watermeter.png', 'HomeWizard Watermeter op een watermeter')} />
+        <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(8,39,48,0) 55%,rgba(8,39,48,.4))"></div>
+      </div>
+    </div>
+    <div>
+      <h2 class="fluid-h2 font-extrabold text-ink">Van overtikken naar automatisch</h2>
+      <p class="mt-3 text-[0.98rem] leading-relaxed text-muted">
+        Veel campings lezen de watermeter nu met de hand af in een schriftje of Excel. Met een HomeWizard
+        Watermeter gebeurt dat automatisch. Peil pikt de wekelijkse stand op, zodat fouten en vergeten weken
+        verdwijnen en de cijfers altijd kloppen.
+      </p>
+      <ul class="mt-5 space-y-2.5">
+        {['Geen overtypfouten meer', 'Nooit meer een week vergeten', 'Verbruik per dag inzichtelijk', 'Bestaande watermeter blijft zitten'].map((b) => (
+          <li class="flex items-center gap-2.5 text-sm font-medium text-deep">
+            <span class="grid h-5 w-5 place-items-center rounded-full bg-good-soft text-good"><Icon name="check" size={13} /></span>{b}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- Steps -->
+  <section class="mt-5 grid gap-3 sm:grid-cols-3 reveal">
+    {steps.map((s) => (
+      <div class="card p-5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl water-grad font-display text-base font-bold text-white">{s.n}</span>
+        <h3 class="mt-3 font-display text-base font-bold text-ink">{s.t}</h3>
+        <p class="mt-1 text-sm leading-relaxed text-muted">{s.d}</p>
+      </div>
+    ))}
+  </section>
+
+  <!-- Live demo van de koppeling -->
+  <section class="mt-6 card overflow-hidden reveal">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-mist/50 px-5 py-4">
+      <div>
+        <h2 class="font-display text-lg font-bold text-ink">Gekoppelde apparaten</h2>
+        <p class="text-xs text-faint">Probeer het uit: koppel een camping en laat Peil de stand uitlezen.</p>
+      </div>
+      <button id="hw-read" class="btn btn-primary px-4 py-2 text-sm">
+        <Icon name="homewizard" size={17} /> Lees gekoppelde uit
+      </button>
+    </div>
+    <div id="hw-list" class="divide-y divide-line-soft"></div>
+    <div class="flex items-center gap-2 border-t border-line bg-canvas px-5 py-3 text-xs text-faint">
+      <Icon name="shield" size={14} class="text-faint" />
+      In deze demo wordt de uitlezing gesimuleerd. In de echte koppeling gebeurt dit via de officiele HomeWizard API.
+    </div>
+  </section>
+</AppLayout>
+
+<script>
+  import {
+    getCampings, currentWeek, readingsFor, previousMeterstand, verbruikOf,
+    readingForWeek, addOrUpdateReading,
+  } from '../lib/store';
+  import { sparkSafeImg } from '../lib/ui';
+
+  const HW_KEY = 'peil:hw';
+  const { year, week } = currentWeek();
+
+  function getConnected(): Set<string> {
+    try {
+      const raw = localStorage.getItem(HW_KEY);
+      return new Set(raw ? JSON.parse(raw) : ['duinzicht']);
+    } catch {
+      return new Set(['duinzicht']);
+    }
+  }
+  function setConnected(s: Set<string>) {
+    localStorage.setItem(HW_KEY, JSON.stringify([...s]));
+  }
+
+  function estimate(campingId: string) {
+    const rs = readingsFor(campingId);
+    const prev = previousMeterstand(campingId, year, week);
+    const last = rs[rs.length - 1];
+    const base = last ? Math.max(2, verbruikOf(last)) : 6;
+    const verbruik = Math.round(base * (0.96 + Math.random() * 0.12) * 10) / 10;
+    return {
+      meterstand: Math.round((prev + verbruik) * 10) / 10,
+      bezoekers: last ? Math.round(last.bezoekers * (0.95 + Math.random() * 0.14)) : 0,
+      bezetting: last ? last.bezetting : 0,
+    };
+  }
+
+  function renderList() {
+    const connected = getConnected();
+    const list = document.getElementById('hw-list')!;
+    list.innerHTML = getCampings().map((c) => {
+      const isConn = connected.has(c.id);
+      const reading = readingForWeek(c.id, year, week);
+      const readByHw = reading?.bron === 'homewizard';
+      return `<div class="flex items-center gap-3 px-5 py-3.5">
+        <span class="water-grad relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl">${sparkSafeImg(c.cover, c.naam)}</span>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold text-deep">${c.naam}</p>
+          <p class="text-xs text-faint">${c.plaats}${readByHw ? ` · uitgelezen wk ${week}` : ''}</p>
+        </div>
+        <span class="chip ${isConn ? 'bg-mist text-brand' : 'bg-line-soft text-faint'}">
+          <span class="h-1.5 w-1.5 rounded-full ${isConn ? 'bg-brand' : 'bg-faint'}"></span>${isConn ? 'Gekoppeld' : 'Niet gekoppeld'}
+        </span>
+        <button data-toggle="${c.id}" class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${isConn ? 'border-line text-muted hover:border-high hover:text-high' : 'border-brand-400 text-brand hover:bg-mist'}">
+          ${isConn ? 'Ontkoppel' : 'Koppel'}
+        </button>
+      </div>`;
+    }).join('');
+
+    list.querySelectorAll<HTMLButtonElement>('[data-toggle]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const set = getConnected();
+        const id = b.dataset.toggle!;
+        set.has(id) ? set.delete(id) : set.add(id);
+        setConnected(set);
+        renderList();
+      }),
+    );
+  }
+
+  document.getElementById('hw-read')!.addEventListener('click', () => {
+    const connected = [...getConnected()];
+    if (!connected.length) {
+      (window as any).peilToast?.('Koppel eerst een camping');
+      return;
+    }
+    let count = 0;
+    for (const id of connected) {
+      const est = estimate(id);
+      addOrUpdateReading({ campingId: id, jaar: year, week, ...est, bron: 'homewizard' });
+      count++;
+    }
+    (window as any).peilToast?.(`HomeWizard las ${count} ${count === 1 ? 'camping' : 'campings'} uit (week ${week})`);
+    renderList();
+  });
+
+  renderList();
+  window.addEventListener('peil:change', renderList);
+</script>

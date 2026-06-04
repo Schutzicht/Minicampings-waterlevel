@@ -1,0 +1,142 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+---
+<AppLayout active="campings" title="Campingdetail" hideHeader>
+  <div id="detailRoot" class="reveal is-in"></div>
+</AppLayout>
+
+<script>
+  import {
+    getCamping, readingsFor, campingWeekly, verbruikOf, literPerBezoeker,
+    bezettingsgraad, weekRangeLabel, currentWeek, readingForWeek,
+    fmt1, fmtInt, fmtPct,
+  } from '../lib/store';
+  import { renderAreaChart } from '../lib/charts';
+  import { effColor, effLabel, sparkSafeImg } from '../lib/ui';
+
+  const root = document.getElementById('detailRoot')!;
+  const slug = new URLSearchParams(location.search).get('c') ?? '';
+  const c = getCamping(slug);
+
+  if (!c) {
+    root.innerHTML = `<div class="card grid place-items-center gap-3 p-12 text-center">
+      <p class="font-display text-xl font-bold text-ink">Camping niet gevonden</p>
+      <p class="text-sm text-muted">Deze locatie bestaat niet in de demo.</p>
+      <a href="/campings" class="btn btn-primary mt-2 px-4 py-2 text-sm">Naar alle campings</a></div>`;
+  } else {
+    document.title = `${c.naam} · Peil`;
+    const readings = readingsFor(c.id);
+    const weekly = campingWeekly(c.id);
+    const latest = readings[readings.length - 1];
+    const { year, week } = currentWeek();
+    const submitted = !!readingForWeek(c.id, year, week);
+    const seizoenVerbruik = weekly.reduce((s, w) => s + w.verbruik, 0);
+    const seizoenBezoekers = weekly.reduce((s, w) => s + w.bezoekers, 0);
+    const lpbSeizoen = seizoenBezoekers ? (seizoenVerbruik * 1000) / seizoenBezoekers : 0;
+    const lpbLatest = latest ? literPerBezoeker(latest) : 0;
+
+    const kpi = (label: string, value: string, unit: string, accent = 'text-ink', sub = '') => `
+      <div class="card p-4">
+        <p class="text-sm font-semibold text-muted">${label}</p>
+        <p class="mt-1.5 flex items-baseline gap-1"><span class="tnum font-display text-2xl font-extrabold ${accent}">${value}</span><span class="text-xs font-semibold text-faint">${unit}</span></p>
+        ${sub ? `<p class="mt-0.5 text-xs text-faint">${sub}</p>` : ''}
+      </div>`;
+
+    root.innerHTML = `
+      <a href="/campings" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-brand">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg> Alle campings
+      </a>
+
+      <div class="card relative overflow-hidden">
+        <div class="relative h-44 w-full overflow-hidden water-grad sm:h-56">
+          ${sparkSafeImg(c.cover, c.naam)}
+          <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(8,39,48,.1) 30%,rgba(8,39,48,.72))"></div>
+          <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+            <div class="text-white">
+              <span class="chip ${submitted ? 'bg-good text-white' : 'bg-warn text-white'} mb-2">${submitted ? 'Deze week ingevuld' : 'Deze week nog open'}</span>
+              <h1 class="font-display text-2xl font-extrabold drop-shadow sm:text-3xl">${c.naam}</h1>
+              <p class="text-sm text-white/85">${c.plaats} · ${c.pitches} kampeerplekken</p>
+            </div>
+            <a href="/invoer?camping=${c.slug}" class="btn btn-primary hidden px-4 py-2 text-sm sm:inline-flex">Waterstand invoeren</a>
+          </div>
+        </div>
+      </div>
+
+      <a href="/invoer?camping=${c.slug}" class="btn btn-primary mt-3 w-full py-2.5 sm:hidden">Waterstand invoeren</a>
+
+      <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        ${kpi('Verbruik laatste week', latest ? fmt1(verbruikOf(latest)) : '–', 'm³', 'text-ink', latest ? `week ${latest.week}` : '')}
+        ${kpi('Liter per gast', lpbLatest ? fmtInt(lpbLatest) : '–', 'L', '', effLabel(lpbLatest))}
+        ${kpi('Bezetting laatste week', latest ? fmtPct(bezettingsgraad(latest)) : '–', '', 'text-ink', latest ? `${latest.bezetting}/${c.pitches} plekken` : '')}
+        ${kpi('Verbruik dit seizoen', fmt1(seizoenVerbruik), 'm³', 'text-ink', `${fmtInt(seizoenBezoekers)} bezoekers`)}
+      </div>
+
+      <div class="mt-4 card p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="font-display text-lg font-bold text-ink">Verloop per week</h2>
+          <div class="flex rounded-xl bg-line-soft p-1 text-xs font-semibold">
+            <button data-m="verbruik" class="dm rounded-lg px-3 py-1.5">Verbruik</button>
+            <button data-m="bezoekers" class="dm rounded-lg px-3 py-1.5">Bezoekers</button>
+            <button data-m="bezetting" class="dm rounded-lg px-3 py-1.5">Bezetting</button>
+          </div>
+        </div>
+        <div id="detailChart" class="mt-4"></div>
+      </div>
+
+      <div class="mt-4 card overflow-hidden">
+        <div class="border-b border-line px-5 py-4"><h2 class="font-display text-lg font-bold text-ink">Weekhistorie</h2></div>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[640px] text-sm">
+            <thead>
+              <tr class="border-b border-line text-left text-xs uppercase tracking-wide text-faint">
+                <th class="px-5 py-2.5 font-semibold">Week</th>
+                <th class="px-3 py-2.5 text-right font-semibold">Meterstand</th>
+                <th class="px-3 py-2.5 text-right font-semibold">Verbruik</th>
+                <th class="px-3 py-2.5 text-right font-semibold">Bezoekers</th>
+                <th class="px-3 py-2.5 text-right font-semibold">Bezetting</th>
+                <th class="px-3 py-2.5 text-right font-semibold">L/gast</th>
+                <th class="px-5 py-2.5 text-right font-semibold">Bron</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[...readings].reverse().map((r) => {
+                const lpb = literPerBezoeker(r);
+                return `<tr class="border-b border-line-soft last:border-0">
+                  <td class="px-5 py-3"><span class="font-semibold text-deep">Week ${r.week}</span><span class="block text-xs text-faint">${weekRangeLabel(r.jaar, r.week)}</span></td>
+                  <td class="px-3 py-3 text-right tnum text-deep">${fmt1(r.meterstand)}</td>
+                  <td class="px-3 py-3 text-right tnum font-semibold text-deep">${fmt1(verbruikOf(r))}</td>
+                  <td class="px-3 py-3 text-right tnum text-deep">${fmtInt(r.bezoekers)}</td>
+                  <td class="px-3 py-3 text-right tnum text-deep">${r.bezetting}/${c.pitches}</td>
+                  <td class="px-3 py-3 text-right tnum font-semibold" style="color:${effColor(lpb)}">${fmtInt(lpb)}</td>
+                  <td class="px-5 py-3 text-right"><span class="chip ${r.bron === 'homewizard' ? 'bg-mist text-brand' : 'bg-line-soft text-muted'}">${r.bron === 'homewizard' ? 'HomeWizard' : 'Handmatig'}</span></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+
+    // chart + toggle
+    const chartEl = document.getElementById('detailChart')!;
+    const metrics = {
+      verbruik: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.verbruik })), unit: ' m³', color: '#0e7c86', fmt: fmt1 },
+      bezoekers: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.bezoekers })), unit: '', color: '#38bdf8', fmt: fmtInt },
+      bezetting: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.bezettingsgraad })), unit: '%', color: '#2fa36b', fmt: fmtInt },
+    } as const;
+    let active: keyof typeof metrics = 'verbruik';
+    const draw = () => {
+      const m = metrics[active];
+      renderAreaChart(chartEl, m.series, { color: m.color, unit: m.unit, height: 250, valueFmt: m.fmt });
+      document.querySelectorAll<HTMLButtonElement>('.dm').forEach((b) => {
+        const on = b.dataset.m === active;
+        b.style.background = on ? '#fff' : 'transparent';
+        b.style.color = on ? 'var(--color-brand)' : 'var(--color-muted)';
+        b.style.boxShadow = on ? '0 1px 3px rgba(8,39,48,.12)' : 'none';
+      });
+    };
+    document.querySelectorAll<HTMLButtonElement>('.dm').forEach((b) =>
+      b.addEventListener('click', () => { active = b.dataset.m as keyof typeof metrics; draw(); }),
+    );
+    draw();
+  }
+</script>
