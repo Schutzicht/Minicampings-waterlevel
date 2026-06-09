@@ -11,22 +11,22 @@ import Icon from '../components/Icon.astro';
   <section class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
     <div class="card p-4 sm:p-5">
       <p class="text-sm font-semibold text-muted">Zuinigste camping</p>
-      <p id="a-best" class="mt-1.5 font-display text-lg font-extrabold text-good">–</p>
+      <p id="a-best" class="mt-1.5 font-display text-lg font-semibold text-good">–</p>
       <p id="a-best-sub" class="text-xs text-faint"></p>
     </div>
     <div class="card p-4 sm:p-5">
       <p class="text-sm font-semibold text-muted">Regio gemiddelde</p>
-      <p class="mt-1.5 flex items-baseline gap-1"><span id="a-avg" class="tnum font-display text-2xl font-extrabold text-ink">–</span><span class="text-xs font-semibold text-faint">L/gast</span></p>
+      <p class="mt-1.5 flex items-baseline gap-1"><span id="a-avg" class="tnum font-display text-2xl font-semibold text-ink">–</span><span class="text-xs font-semibold text-faint">L/gast</span></p>
       <p class="text-xs text-faint">over het seizoen</p>
     </div>
     <div class="card p-4 sm:p-5">
       <p class="text-sm font-semibold text-muted">Totaal verbruik</p>
-      <p class="mt-1.5 flex items-baseline gap-1"><span id="a-tot" class="tnum font-display text-2xl font-extrabold text-ink">–</span><span class="text-xs font-semibold text-faint">m³</span></p>
+      <p class="mt-1.5 flex items-baseline gap-1"><span id="a-tot" class="tnum font-display text-2xl font-semibold text-ink">–</span><span class="text-xs font-semibold text-faint">m³</span></p>
       <p class="text-xs text-faint">alle campings, seizoen</p>
     </div>
     <div class="card p-4 sm:p-5">
       <p class="text-sm font-semibold text-muted">Totaal bezoekers</p>
-      <p id="a-bez" class="mt-1.5 tnum font-display text-2xl font-extrabold text-ink">–</p>
+      <p id="a-bez" class="mt-1.5 tnum font-display text-2xl font-semibold text-ink">–</p>
       <p class="text-xs text-faint">alle campings, seizoen</p>
     </div>
   </section>
@@ -125,7 +125,7 @@ import Icon from '../components/Icon.astro';
       const el = sm.querySelector(`[data-c="${r.camping.id}"] .sm-chart`) as HTMLElement;
       const weekly = campingWeekly(r.camping.id);
       renderAreaChart(el, weekly.map((w) => ({ label: `${w.week}`, value: w.verbruik })), {
-        color: '#0e7c86', height: 130, unit: ' m³', valueFmt: fmt1,
+        color: '#2563eb', height: 130, unit: ' m³', valueFmt: fmt1,
       });
     });
 

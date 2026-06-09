@@ -38,7 +38,7 @@ import AppLayout from '../layouts/AppLayout.astro';
     const kpi = (label: string, value: string, unit: string, accent = 'text-ink', sub = '') => `
       <div class="card p-4">
         <p class="text-sm font-semibold text-muted">${label}</p>
-        <p class="mt-1.5 flex items-baseline gap-1"><span class="tnum font-display text-2xl font-extrabold ${accent}">${value}</span><span class="text-xs font-semibold text-faint">${unit}</span></p>
+        <p class="mt-1.5 flex items-baseline gap-1"><span class="tnum font-display text-2xl font-semibold ${accent}">${value}</span><span class="text-xs font-semibold text-faint">${unit}</span></p>
         ${sub ? `<p class="mt-0.5 text-xs text-faint">${sub}</p>` : ''}
       </div>`;
 
@@ -54,7 +54,7 @@ import AppLayout from '../layouts/AppLayout.astro';
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
             <div class="text-white">
               <span class="chip ${submitted ? 'bg-good text-white' : 'bg-warn text-white'} mb-2">${submitted ? 'Deze week ingevuld' : 'Deze week nog open'}</span>
-              <h1 class="font-display text-2xl font-extrabold drop-shadow sm:text-3xl">${c.naam}</h1>
+              <h1 class="font-display text-2xl font-semibold drop-shadow sm:text-3xl">${c.naam}</h1>
               <p class="text-sm text-white/85">${c.plaats} · ${c.pitches} kampeerplekken</p>
             </div>
             <a href="/invoer?camping=${c.slug}" class="btn btn-primary hidden px-4 py-2 text-sm sm:inline-flex">Waterstand invoeren</a>
@@ -119,9 +119,9 @@ import AppLayout from '../layouts/AppLayout.astro';
     // chart + toggle
     const chartEl = document.getElementById('detailChart')!;
     const metrics = {
-      verbruik: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.verbruik })), unit: ' m³', color: '#0e7c86', fmt: fmt1 },
-      bezoekers: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.bezoekers })), unit: '', color: '#38bdf8', fmt: fmtInt },
-      bezetting: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.bezettingsgraad })), unit: '%', color: '#2fa36b', fmt: fmtInt },
+      verbruik: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.verbruik })), unit: ' m³', color: '#2563eb', fmt: fmt1 },
+      bezoekers: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.bezoekers })), unit: '', color: '#60a5fa', fmt: fmtInt },
+      bezetting: { series: weekly.map((w) => ({ label: `wk ${w.week}`, value: w.bezettingsgraad })), unit: '%', color: '#16a34a', fmt: fmtInt },
     } as const;
     let active: keyof typeof metrics = 'verbruik';
     const draw = () => {

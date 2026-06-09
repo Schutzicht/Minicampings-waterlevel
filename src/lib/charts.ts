@@ -8,8 +8,8 @@ export interface Point {
   sub?: string;
 }
 
-const BRAND = '#0e7c86';
-const AQUA = '#18c3c0';
+const BRAND = '#2563eb';
+const AQUA = '#60a5fa';
 
 let uid = 0;
 const nextId = () => `pg${++uid}`;
@@ -61,8 +61,8 @@ export function renderAreaChart(
   const grid = gridVals
     .map((v) => {
       const yy = y(v);
-      return `<line x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}" stroke="#e6eef0" stroke-width="1"/>
-        <text x="${padL - 8}" y="${yy + 3.5}" text-anchor="end" font-size="10.5" fill="#8aa0a6">${fmtNL(v)}</text>`;
+      return `<line x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}" stroke="#ececea" stroke-width="1"/>
+        <text x="${padL - 8}" y="${yy + 3.5}" text-anchor="end" font-size="10.5" fill="#9b9b98">${fmtNL(v)}</text>`;
     })
     .join('');
 
@@ -70,7 +70,7 @@ export function renderAreaChart(
   const xLabels = series
     .map((p, i) =>
       i % labelStep === 0 || i === n - 1
-        ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10.5" fill="#8aa0a6">${p.label}</text>`
+        ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10.5" fill="#9b9b98">${p.label}</text>`
         : '',
     )
     .join('');
@@ -137,13 +137,13 @@ export function renderBarChart(
       .map((p, i) => {
         const yy = 8 + i * rowH;
         const w = Math.max(2, (p.value / max) * innerW);
-        const c = p.color ?? (p.highlight ? color : '#bfe0e1');
+        const c = p.color ?? (p.highlight ? color : '#c7d6f5');
         return `
-        <text x="${padL - 12}" y="${yy + rowH / 2 - 4}" text-anchor="end" font-size="12.5" font-weight="600" fill="#082730">${p.label}</text>
-        <text x="${padL - 12}" y="${yy + rowH / 2 + 11}" text-anchor="end" font-size="10.5" fill="#8aa0a6">${p.sub ?? ''}</text>
-        <rect x="${padL}" y="${yy + 6}" width="${innerW}" height="${rowH - 18}" rx="5" fill="#eef3f4"/>
+        <text x="${padL - 12}" y="${yy + rowH / 2 - 4}" text-anchor="end" font-size="12.5" font-weight="600" fill="#1d1d1b">${p.label}</text>
+        <text x="${padL - 12}" y="${yy + rowH / 2 + 11}" text-anchor="end" font-size="10.5" fill="#9b9b98">${p.sub ?? ''}</text>
+        <rect x="${padL}" y="${yy + 6}" width="${innerW}" height="${rowH - 18}" rx="5" fill="#f1f1ef"/>
         <rect x="${padL}" y="${yy + 6}" width="${w}" height="${rowH - 18}" rx="5" fill="${c}"/>
-        <text x="${padL + w + 8}" y="${yy + rowH / 2 + 1}" font-size="12" font-weight="700" fill="#0b3d49">${valueFmt(p.value)}</text>`;
+        <text x="${padL + w + 8}" y="${yy + rowH / 2 + 1}" font-size="12" font-weight="700" fill="#1d1d1b">${valueFmt(p.value)}</text>`;
       })
       .join('');
     el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="xMidYMid meet" font-family="Inter, sans-serif">${rows}</svg>`;
@@ -167,8 +167,8 @@ export function renderBarChart(
   const grid = [0, 0.5, 1]
     .map((f) => {
       const yy = y(f * max);
-      return `<line x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}" stroke="#e6eef0"/>
-        <text x="${padL - 8}" y="${yy + 3.5}" text-anchor="end" font-size="10.5" fill="#8aa0a6">${fmtNL(f * max)}</text>`;
+      return `<line x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}" stroke="#ececea"/>
+        <text x="${padL - 8}" y="${yy + 3.5}" text-anchor="end" font-size="10.5" fill="#9b9b98">${fmtNL(f * max)}</text>`;
     })
     .join('');
   const labelStep = Math.ceil(n / 9);
@@ -177,10 +177,10 @@ export function renderBarChart(
       const cx = padL + slot * i + slot / 2;
       const yy = y(p.value);
       const h = padT + innerH - yy;
-      const fill = p.highlight ? `url(#${id})` : '#cfe6e7';
+      const fill = p.highlight ? `url(#${id})` : '#dbe4f7';
       const lbl =
         i % labelStep === 0 || i === n - 1
-          ? `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10.5" fill="#8aa0a6">${p.label}</text>`
+          ? `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10.5" fill="#9b9b98">${p.label}</text>`
           : '';
       return `<rect x="${cx - bw / 2}" y="${yy}" width="${bw}" height="${Math.max(2, h)}" rx="4" fill="${fill}">
           <title>${p.label}: ${valueFmt(p.value)}</title></rect>${lbl}`;
@@ -240,11 +240,11 @@ export function gaugeSVG(percent: number, opts: { size?: number; color?: string;
   const val = `M ${cx - r},${cy} A ${r},${r} 0 0 1 ${ex.toFixed(2)},${ey.toFixed(2)}`;
   return `<svg width="${w}" height="${h + 18}" viewBox="0 0 ${w} ${h + 18}" font-family="Inter Tight, Inter, sans-serif">
     <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#18c3c0"/><stop offset="100%" stop-color="${color}"/>
+      <stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="${color}"/>
     </linearGradient></defs>
-    <path d="${track}" fill="none" stroke="#e6eef0" stroke-width="11" stroke-linecap="round"/>
+    <path d="${track}" fill="none" stroke="#ececea" stroke-width="11" stroke-linecap="round"/>
     <path d="${val}" fill="none" stroke="url(#${id})" stroke-width="11" stroke-linecap="round"/>
-    <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="26" font-weight="800" fill="#082730">${Math.round(p)}<tspan font-size="14">%</tspan></text>
-    <text x="${cx}" y="${h + 12}" text-anchor="middle" font-size="11" fill="#8aa0a6">${label}</text>
+    <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="26" font-weight="800" fill="#1d1d1b">${Math.round(p)}<tspan font-size="14">%</tspan></text>
+    <text x="${cx}" y="${h + 12}" text-anchor="middle" font-size="11" fill="#9b9b98">${label}</text>
   </svg>`;
 }

@@ -32,8 +32,8 @@ const functies = [
     <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr]">
       <div class="reveal is-in">
         <span class="chip border border-line bg-white text-brand"><span class="h-1.5 w-1.5 rounded-full bg-aqua"></span>Watermonitoring voor minicampings</span>
-        <h1 class="fluid-hero mt-5 font-extrabold text-ink">
-          Grip op het <span class="text-brand">waterverbruik</span> van campings in de regio
+        <h1 class="fluid-hero mt-5 font-semibold text-ink">
+          Grip op het <span class="rounded-md bg-[var(--color-accent-soft)] px-1.5 text-ink">waterverbruik</span> van campings in de regio
         </h1>
         <p class="mt-5 max-w-xl text-lg leading-relaxed text-muted">
           Leg wekelijks de waterstand, het aantal bezoekers en de bezetting vast. Peil maakt er direct
@@ -46,7 +46,7 @@ const functies = [
         <div class="mt-8 flex items-center gap-3 text-sm text-faint">
           <div class="flex -space-x-2">
             {[1, 2, 3].map((i) => (
-              <span class={`h-7 w-7 rounded-full border-2 border-canvas water-grad`} style={`opacity:${1 - i * 0.18}`}></span>
+              <span class={`h-7 w-7 rounded-full border-2 border-[var(--color-bg)] bg-[var(--color-ink)]`} style={`opacity:${1 - i * 0.18}`}></span>
             ))}
           </div>
           Pilot met 6 minicampings in Zeeland
@@ -69,16 +69,16 @@ const functies = [
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V7M6 12l6-6 6 6"/></svg>8%
             </span>
           </div>
-          <p class="tnum font-display text-2xl font-extrabold text-ink">312 <span class="text-sm font-semibold text-faint">L</span></p>
+          <p class="tnum font-display text-2xl font-semibold text-ink">312 <span class="text-sm font-semibold text-faint">L</span></p>
           <svg class="mt-1 w-full" height="34" viewBox="0 0 180 34" preserveAspectRatio="none">
-            <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e7c86" stop-opacity=".22"/><stop offset="100%" stop-color="#0e7c86" stop-opacity="0"/></linearGradient></defs>
+            <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity=".22"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>
             <path d="M1,26 L26,22 L51,24 L76,15 L101,18 L126,11 L151,13 L179,7 L179,34 L1,34 Z" fill="url(#hg)"/>
-            <polyline points="1,26 26,22 51,24 76,15 101,18 126,11 151,13 179,7" fill="none" stroke="#0e7c86" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="1,26 26,22 51,24 76,15 101,18 126,11 151,13 179,7" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         <div class="absolute -right-2 -top-4 hidden rounded-xl border border-line bg-white/95 px-3.5 py-2.5 shadow-lift backdrop-blur sm:block">
           <p class="text-xs font-semibold text-muted">Deze week</p>
-          <p class="tnum font-display text-lg font-extrabold text-ink">6/6 <span class="text-xs font-semibold text-good">ingevuld</span></p>
+          <p class="tnum font-display text-lg font-semibold text-ink">6/6 <span class="text-xs font-semibold text-good">ingevuld</span></p>
         </div>
       </div>
     </div>
@@ -88,7 +88,7 @@ const functies = [
   <section id="probleem" class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
     <div class="reveal max-w-2xl">
       <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Het probleem</p>
-      <h2 class="fluid-h2 mt-2 font-extrabold text-ink">Waterverbruik bijhouden is nu lastig</h2>
+      <h2 class="fluid-h2 mt-2 font-semibold text-ink">Waterverbruik bijhouden is nu lastig</h2>
     </div>
     <div class="mt-10 grid gap-4 md:grid-cols-3">
       {probleem.map((p, i) => (
@@ -106,12 +106,12 @@ const functies = [
     <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
       <div class="reveal max-w-2xl">
         <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Zo werkt het</p>
-        <h2 class="fluid-h2 mt-2 font-extrabold text-ink">Van meterstand naar inzicht in drie stappen</h2>
+        <h2 class="fluid-h2 mt-2 font-semibold text-ink">Van meterstand naar inzicht in drie stappen</h2>
       </div>
       <div class="mt-10 grid gap-5 md:grid-cols-3">
         {stappen.map((s, i) => (
           <div class="reveal relative" style={`transition-delay:${i * 90}ms`}>
-            <span class="font-display text-5xl font-extrabold text-mist">{s.n}</span>
+            <span class="font-display text-5xl font-semibold text-mist">{s.n}</span>
             <h3 class="mt-2 font-display text-xl font-bold text-ink">{s.t}</h3>
             <p class="mt-1.5 text-sm leading-relaxed text-muted">{s.d}</p>
           </div>
@@ -124,13 +124,13 @@ const functies = [
   <section id="functies" class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
     <div class="reveal max-w-2xl">
       <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Functies</p>
-      <h2 class="fluid-h2 mt-2 font-extrabold text-ink">Alles om water te volgen, op een plek</h2>
+      <h2 class="fluid-h2 mt-2 font-semibold text-ink">Alles om water te volgen, op een plek</h2>
     </div>
     <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {functies.map((f, i) => (
         <div class="card reveal relative p-6" style={`transition-delay:${i * 70}ms`}>
           {f.soon && <span class="absolute right-4 top-4 chip bg-warn-soft text-warn">Binnenkort</span>}
-          <span class="grid h-11 w-11 place-items-center rounded-xl water-grad text-white"><Icon name={f.icon} size={21} /></span>
+          <span class="grid h-11 w-11 place-items-center rounded-xl bg-[var(--color-surface-2)] text-[var(--color-ink-2)]"><Icon name={f.icon} size={21} /></span>
           <h3 class="mt-4 font-display text-lg font-bold text-ink">{f.t}</h3>
           <p class="mt-1.5 text-sm leading-relaxed text-muted">{f.d}</p>
         </div>
@@ -140,11 +140,11 @@ const functies = [
 
   <!-- HomeWizard teaser -->
   <section id="homewizard" class="mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:pb-24">
-    <div class="reveal overflow-hidden rounded-2xl border border-line" style="background:linear-gradient(150deg,#0b3d49,#082730)">
+    <div class="reveal overflow-hidden rounded-2xl border border-line" style="background:linear-gradient(150deg,#1d1d1b,#1d1d1b)">
       <div class="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
         <div>
           <span class="chip bg-white/10 text-aqua"><span class="h-1.5 w-1.5 rounded-full bg-aqua"></span>Volgende stap</span>
-          <h2 class="fluid-h2 mt-4 font-extrabold text-white">Straks leest Peil de meter zelf uit</h2>
+          <h2 class="fluid-h2 mt-4 font-semibold text-white">Straks leest Peil de meter zelf uit</h2>
           <p class="mt-3 max-w-md leading-relaxed text-white/65">
             Met een HomeWizard Watermeter wordt de waterstand automatisch ingelezen. Geen overtikken,
             geen vergeten weken. De ranglijst en grafieken vullen zichzelf.
@@ -172,7 +172,7 @@ const functies = [
   <section class="bg-white">
     <div class="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 lg:py-24">
       <div class="reveal mx-auto max-w-2xl">
-        <h2 class="fluid-h2 font-extrabold text-ink">Klaar om te zien hoe het werkt?</h2>
+        <h2 class="fluid-h2 font-semibold text-ink">Klaar om te zien hoe het werkt?</h2>
         <p class="mt-3 text-muted">Het dashboard staat klaar met voorbeelddata van zes minicampings.</p>
         <a href="/dashboard" class="btn btn-primary mt-6 px-7 py-3 text-base">Open het dashboard <Icon name="right" size={18} /></a>
       </div>

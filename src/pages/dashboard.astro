@@ -28,7 +28,7 @@ const kpis = [
           <span id={`kpi-${k.id}-trend`}></span>
         </div>
         <p class="mt-2.5 flex items-baseline gap-1">
-          <span id={`kpi-${k.id}`} class="tnum font-display text-3xl font-extrabold text-ink sm:text-[2.1rem]">–</span>
+          <span id={`kpi-${k.id}`} class="tnum font-display text-3xl font-semibold text-ink sm:text-[2.1rem]">–</span>
           <span class="text-sm font-semibold text-faint">{k.unit}</span>
         </p>
         <p class="mt-1 text-xs text-faint"><span>{k.sub}</span><span id={`kpi-${k.id}-wk`}></span></p>
@@ -62,7 +62,7 @@ const kpis = [
       <div class="mt-4 flex items-center gap-4">
         <div id="weekRing"></div>
         <div>
-          <p id="weekFrac" class="tnum font-display text-2xl font-extrabold text-ink">–</p>
+          <p id="weekFrac" class="tnum font-display text-2xl font-semibold text-ink">–</p>
           <p class="text-xs text-faint">campings ingevuld</p>
         </div>
       </div>
@@ -131,9 +131,9 @@ const kpis = [
     const chartEl = document.getElementById('regionChart')!;
     const footEl = document.getElementById('regionFoot')!;
     const metrics = {
-      verbruik: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.verbruik })), unit: ' m³', color: '#0e7c86', foot: 'Totaal waterverbruik van alle campings samen, per week.' },
-      bezoekers: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.bezoekers })), unit: '', color: '#38bdf8', foot: 'Aantal bezoekers in de regio, per week.' },
-      bezetting: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.bezettingsgraad })), unit: '%', color: '#2fa36b', foot: 'Gemiddelde bezettingsgraad over alle campings, per week.' },
+      verbruik: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.verbruik })), unit: ' m³', color: '#2563eb', foot: 'Totaal waterverbruik van alle campings samen, per week.' },
+      bezoekers: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.bezoekers })), unit: '', color: '#60a5fa', foot: 'Aantal bezoekers in de regio, per week.' },
+      bezetting: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.bezettingsgraad })), unit: '%', color: '#16a34a', foot: 'Gemiddelde bezettingsgraad over alle campings, per week.' },
     } as const;
     let activeMetric: keyof typeof metrics = 'verbruik';
     const drawChart = () => {
@@ -160,9 +160,9 @@ const kpis = [
     const r = 26, c = 2 * Math.PI * r;
     html('weekRing', `<svg width="68" height="68" viewBox="0 0 68 68">
       <circle cx="34" cy="34" r="${r}" fill="none" stroke="#e6eef0" stroke-width="7"/>
-      <circle cx="34" cy="34" r="${r}" fill="none" stroke="#0e7c86" stroke-width="7" stroke-linecap="round"
+      <circle cx="34" cy="34" r="${r}" fill="none" stroke="#2563eb" stroke-width="7" stroke-linecap="round"
         stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - p)}" transform="rotate(-90 34 34)"/>
-      <text x="34" y="39" text-anchor="middle" font-size="17" font-weight="800" fill="#082730" font-family="Inter Tight">${Math.round(p * 100)}<tspan font-size="10">%</tspan></text>
+      <text x="34" y="39" text-anchor="middle" font-size="17" font-weight="800" fill="#1d1d1b" font-family="Inter Tight">${Math.round(p * 100)}<tspan font-size="10">%</tspan></text>
     </svg>`);
 
     const openEl = document.getElementById('weekOpen')!;
@@ -200,7 +200,7 @@ const kpis = [
           <div><p class="text-[0.7rem] text-faint">L/gast</p><p class="tnum text-sm font-bold" style="color:${effColor(s.literPerBezoeker)}">${fmtInt(s.literPerBezoeker)}</p></div>
           <div><p class="text-[0.7rem] text-faint">Bezetting</p><p class="tnum text-sm font-bold text-deep">${fmtPct(s.bezettingsgraad)}</p></div>
         </div>
-        <div class="hidden sm:block sm:w-28">${sparklineSVG(s.spark, { w: 112, h: 34, color: '#0e7c86' })}</div>
+        <div class="hidden sm:block sm:w-28">${sparklineSVG(s.spark, { w: 112, h: 34, color: '#2563eb' })}</div>
         <div class="flex items-center gap-2 sm:w-28 sm:justify-end">
           <span class="chip ${s.submittedThisWeek ? 'bg-good-soft text-good' : 'bg-warn-soft text-warn'}">
             <span class="h-1.5 w-1.5 rounded-full ${s.submittedThisWeek ? 'bg-good' : 'bg-warn'}"></span>

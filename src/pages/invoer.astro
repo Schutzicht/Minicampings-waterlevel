@@ -14,12 +14,12 @@ import Icon from '../components/Icon.astro';
       <div class="grid gap-5 sm:grid-cols-2">
         <label class="block sm:col-span-2">
           <span class="mb-1.5 block text-sm font-semibold text-deep">Camping</span>
-          <select id="f-camping" class="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-medium text-ink"></select>
+          <select id="f-camping" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink"></select>
         </label>
 
         <label class="block">
           <span class="mb-1.5 block text-sm font-semibold text-deep">Week</span>
-          <select id="f-week" class="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-medium text-ink"></select>
+          <select id="f-week" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink"></select>
         </label>
 
         <label class="block">
@@ -27,7 +27,7 @@ import Icon from '../components/Icon.astro';
             Meterstand <span class="text-xs font-medium text-faint">m³</span>
           </span>
           <input id="f-meter" type="number" inputmode="decimal" step="0.1" min="0" placeholder="0,0"
-            class="tnum w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
+            class="tnum w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
           <span id="f-meter-hint" class="mt-1 block text-xs text-faint"></span>
         </label>
 
@@ -36,7 +36,7 @@ import Icon from '../components/Icon.astro';
             Aantal bezoekers <Icon name="users" size={15} class="text-faint" />
           </span>
           <input id="f-bezoekers" type="number" inputmode="numeric" min="0" placeholder="0"
-            class="tnum w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
+            class="tnum w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
           <span class="mt-1 block text-xs text-faint">Gasten die deze week verbleven.</span>
         </label>
 
@@ -50,7 +50,7 @@ import Icon from '../components/Icon.astro';
         </label>
       </div>
 
-      <div id="f-edit-note" class="mt-5 hidden items-center gap-2 rounded-xl bg-mist px-3.5 py-2.5 text-sm font-medium text-brand">
+      <div id="f-edit-note" class="mt-5 hidden items-center gap-2 rounded-[10px] bg-mist px-3.5 py-2.5 text-sm font-medium text-brand">
         <Icon name="clock" size={16} /> <span></span>
       </div>
 
@@ -61,7 +61,7 @@ import Icon from '../components/Icon.astro';
     </form>
 
     <!-- Live berekening -->
-    <aside class="card reveal flex flex-col gap-5 bg-deep p-5 text-white sm:p-6 lg:col-span-2" style="background:linear-gradient(160deg,#0b3d49,#082730)">
+    <aside class="card reveal flex flex-col gap-5 bg-deep p-5 text-white sm:p-6 lg:col-span-2" style="background:linear-gradient(160deg,#1d1d1b,#1d1d1b)">
       <div>
         <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Live berekend</p>
         <h2 class="font-display text-lg font-bold">Wat dit betekent</h2>
@@ -70,7 +70,7 @@ import Icon from '../components/Icon.astro';
       <div>
         <p class="text-sm text-white/60">Verbruik deze week</p>
         <p class="mt-0.5 flex items-baseline gap-1.5">
-          <span id="calc-verbruik" class="tnum font-display text-[2.6rem] font-extrabold leading-none">–</span>
+          <span id="calc-verbruik" class="tnum font-display text-[2.6rem] font-semibold leading-none">–</span>
           <span class="text-base font-semibold text-white/55">m³</span>
         </p>
         <p id="calc-verbruik-note" class="mt-1 text-xs text-white/45"></p>
@@ -79,12 +79,12 @@ import Icon from '../components/Icon.astro';
       <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-5">
         <div>
           <p class="text-sm text-white/60">Liter per gast</p>
-          <p class="mt-0.5"><span id="calc-lpb" class="tnum font-display text-2xl font-extrabold">–</span><span class="text-sm font-semibold text-white/55"> L</span></p>
+          <p class="mt-0.5"><span id="calc-lpb" class="tnum font-display text-2xl font-semibold">–</span><span class="text-sm font-semibold text-white/55"> L</span></p>
           <p id="calc-lpb-label" class="mt-0.5 text-xs font-semibold text-aqua"></p>
         </div>
         <div>
           <p class="text-sm text-white/60">Bezettingsgraad</p>
-          <p class="mt-0.5"><span id="calc-bez" class="tnum font-display text-2xl font-extrabold">–</span><span class="text-sm font-semibold text-white/55"> %</span></p>
+          <p class="mt-0.5"><span id="calc-bez" class="tnum font-display text-2xl font-semibold">–</span><span class="text-sm font-semibold text-white/55"> %</span></p>
           <div id="calc-bez-bar" class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/15"><div class="h-full rounded-full bg-aqua" style="width:0%;transition:width .5s ease"></div></div>
         </div>
       </div>

@@ -1,0 +1,41 @@
+---
+import Logo from './Logo.astro';
+
+interface Props {
+  title?: string;
+  subtitle?: string;
+}
+const { title, subtitle } = Astro.props;
+---
+<header class="glass sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 sm:px-5">
+  <div class="flex min-w-0 flex-1 items-center gap-3">
+    <a href="/" class="md:hidden" aria-label="Peil home"><Logo variant="mark" size={28} /></a>
+    {title && (
+      <div class="min-w-0">
+        <h1 class="truncate text-[15px] font-semibold tracking-tight text-[var(--color-ink)]">{title}</h1>
+        {subtitle && <p class="hidden truncate text-[11.5px] text-[var(--color-ink-3)] sm:block">{subtitle}</p>}
+      </div>
+    )}
+  </div>
+
+  <div class="flex items-center gap-2 sm:gap-2.5">
+    <a
+      href="/invoer"
+      id="weekPill"
+      class="hidden items-center gap-1.5 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-[12px] font-medium text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] sm:inline-flex"
+    >
+      <span class="h-2 w-2 rounded-full bg-[var(--color-warn)]"></span>
+      <span class="tnum">Deze week</span>
+    </a>
+
+    <slot name="action" />
+
+    <div class="flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 pl-1 pr-2.5">
+      <span class="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-ink)] text-[11px] font-semibold text-white">RZ</span>
+      <div class="hidden flex-col leading-none sm:flex">
+        <span class="text-[12px] font-medium text-[var(--color-ink)]">Regio Zeeland</span>
+        <span class="mt-0.5 text-[10px] uppercase tracking-wider text-[var(--color-ink-3)]">Beheerder</span>
+      </div>
+    </div>
+  </div>
+</header>
