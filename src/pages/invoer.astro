@@ -40,14 +40,13 @@ import Icon from '../components/Icon.astro';
           <span class="mt-1 block text-xs text-faint">Gasten die deze week verbleven.</span>
         </label>
 
-        <label class="block">
-          <span class="mb-1.5 flex items-center justify-between text-sm font-semibold text-deep">
-            Bezetting <span id="f-bez-read" class="tnum text-xs font-bold text-brand"></span>
+        <div class="block sm:col-span-2">
+          <span class="mb-2 flex items-center justify-between text-sm font-semibold text-deep">
+            Bezetting per type <span id="f-bez-read" class="tnum text-xs font-bold text-brand"></span>
           </span>
-          <input id="f-bezetting-range" type="range" min="0" value="0" class="peil-range w-full" />
-          <input id="f-bezetting" type="hidden" />
-          <span id="f-bez-hint" class="mt-1 block text-xs text-faint"></span>
-        </label>
+          <div id="f-bez-types" class="space-y-2"></div>
+          <span id="f-bez-hint" class="mt-2 block text-xs text-faint"></span>
+        </div>
       </div>
 
       <div id="f-edit-note" class="mt-5 hidden items-center gap-2 rounded-[10px] bg-mist px-3.5 py-2.5 text-sm font-medium text-brand">
@@ -121,8 +120,7 @@ import Icon from '../components/Icon.astro';
   const weekSel = $<HTMLSelectElement>('f-week');
   const meterInp = $<HTMLInputElement>('f-meter');
   const bezoekersInp = $<HTMLInputElement>('f-bezoekers');
-  const bezRange = $<HTMLInputElement>('f-bezetting-range');
-  const bezHidden = $<HTMLInputElement>('f-bezetting');
+  const bezTypesWrap = $('f-bez-types');
 
   const { year } = currentWeek();
 
@@ -156,23 +154,54 @@ import Icon from '../components/Icon.astro';
     return getCamping(campingSel.value)!;
   }
 
+  function renderBezTypes(c: ReturnType<typeof selectedCamping>, existing?: ReturnType<typeof readingForWeek>) {
+    bezTypesWrap.innerHTML = c.types
+      .map((t) => {
+        const val = existing?.bezettingPerType?.[t.id] ?? '';
+        return `<div class="flex items-center justify-between gap-3 rounded-[10px] border border-line bg-white px-3 py-2">
+          <span class="text-sm font-medium text-deep">${t.label}</span>
+          <span class="flex items-center gap-2">
+            <input data-bt="${t.id}" type="number" inputmode="numeric" min="0" max="${t.aantal}" value="${val}" placeholder="0"
+              class="tnum w-16 rounded-[8px] border border-line bg-white px-2.5 py-1.5 text-right text-sm font-semibold text-ink" />
+            <span class="tnum w-9 text-xs text-faint">/ ${t.aantal}</span>
+          </span>
+        </div>`;
+      })
+      .join('');
+    bezTypesWrap.querySelectorAll<HTMLInputElement>('input[data-bt]').forEach((i) =>
+      i.addEventListener('input', () => { syncBezReadout(); recalc(); }),
+    );
+  }
+
+  function bezSum() {
+    let s = 0;
+    bezTypesWrap.querySelectorAll<HTMLInputElement>('input[data-bt]').forEach((i) => (s += parseInt(i.value || '0', 10)));
+    return s;
+  }
+  function bezPerType(): Record<string, number> {
+    const r: Record<string, number> = {};
+    bezTypesWrap.querySelectorAll<HTMLInputElement>('input[data-bt]').forEach((i) => {
+      const n = parseInt(i.value || '0', 10);
+      if (n) r[i.dataset.bt!] = n;
+    });
+    return r;
+  }
+
   function syncFormFromState() {
     const c = selectedCamping();
     const week = Number(weekSel.value);
-    bezRange.max = String(c.pitches);
     const existing = readingForWeek(c.id, year, week);
     const prev = previousMeterstand(c.id, year, week);
 
     $('f-meter-hint').textContent = `Vorige stand: ${fmt1(prev)} m³`;
-    const shortType = (id: string) => (id === 'staplaats' ? 'staplaatsen' : id === 'camperplaats' ? 'camperplaatsen' : id === 'chalet' ? 'chalets' : id);
-    const typeStr = c.types.map((t) => `${t.aantal} ${shortType(t.id)}`).join(' · ');
-    $<HTMLElement>('f-bez-hint').textContent = `0 t/m ${c.pitches} plekken · ${typeStr}`;
+    $('f-bez-hint').textContent = `Vul per type in hoeveel plekken bezet waren. ${c.pitches} plekken in totaal.`;
+
+    renderBezTypes(c, existing);
 
     const note = $('f-edit-note');
     if (existing) {
       meterInp.value = String(existing.meterstand);
       bezoekersInp.value = String(existing.bezoekers);
-      bezRange.value = String(existing.bezetting);
       $('f-submit').textContent = 'Bijwerken';
       note.classList.remove('hidden');
       note.classList.add('flex');
@@ -181,7 +210,6 @@ import Icon from '../components/Icon.astro';
       meterInp.value = '';
       meterInp.placeholder = fmt1(prev);
       bezoekersInp.value = '';
-      bezRange.value = '0';
       $('f-submit').textContent = 'Opslaan';
       note.classList.add('hidden');
       note.classList.remove('flex');
@@ -192,8 +220,7 @@ import Icon from '../components/Icon.astro';
 
   function syncBezReadout() {
     const c = selectedCamping();
-    bezHidden.value = bezRange.value;
-    $('f-bez-read').textContent = `${bezRange.value} / ${c.pitches} plekken`;
+    $('f-bez-read').textContent = `${bezSum()} / ${c.pitches} plekken`;
   }
 
   function recalc() {
@@ -202,7 +229,7 @@ import Icon from '../components/Icon.astro';
     const prev = previousMeterstand(c.id, year, week);
     const meter = parseFloat(meterInp.value.replace(',', '.'));
     const bezoekers = parseInt(bezoekersInp.value || '0', 10);
-    const bezetting = parseInt(bezRange.value || '0', 10);
+    const bezetting = bezSum();
 
     const hasMeter = !isNaN(meter);
     const verbruik = hasMeter ? Math.round((meter - prev) * 10) / 10 : null;
@@ -272,7 +299,6 @@ import Icon from '../components/Icon.astro';
   weekSel.addEventListener('change', syncFormFromState);
   meterInp.addEventListener('input', recalc);
   bezoekersInp.addEventListener('input', recalc);
-  bezRange.addEventListener('input', () => { syncBezReadout(); recalc(); });
 
   $('invoerForm').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -280,10 +306,11 @@ import Icon from '../components/Icon.astro';
     const week = Number(weekSel.value);
     const meter = parseFloat(meterInp.value.replace(',', '.'));
     const bezoekers = parseInt(bezoekersInp.value || '0', 10);
-    const bezetting = parseInt(bezRange.value || '0', 10);
+    const bezettingPerType = bezPerType();
+    const bezetting = bezSum();
     if (isNaN(meter) || meter <= 0) { meterInp.focus(); (window as any).peilToast?.('Vul een meterstand in'); return; }
 
-    addOrUpdateReading({ campingId: c.id, jaar: year, week, meterstand: meter, bezoekers, bezetting, bron: 'handmatig' });
+    addOrUpdateReading({ campingId: c.id, jaar: year, week, meterstand: meter, bezoekers, bezetting, bezettingPerType, bron: 'handmatig' });
     (window as any).peilToast?.(`Opgeslagen voor ${c.naam.replace('Minicamping ', '')}`);
     renderRecent();
 

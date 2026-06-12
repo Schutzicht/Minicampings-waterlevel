@@ -73,14 +73,12 @@ const mobileNav = [
     <DemoTour />
 
     <script>
-      import { currentWeekStatus, resetDemo, getRole, setRole, getCamping, roleScope, currentWeek, readingForWeek } from '../lib/store';
+      import { currentWeekStatus, resetDemo, getRole, getCamping, roleScope, currentWeek, readingForWeek } from '../lib/store';
 
-      // Rol-switcher (regio-beheerder vs camping-eigenaar)
+      // Toont het ingelogde account (wisselen gaat via /login)
       const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '').replace(/^De |^'t /, '');
       function paintRole() {
-        const sel = document.getElementById('roleSelect') as HTMLSelectElement | null;
         const role = getRole();
-        if (sel) sel.value = role;
         const av = document.getElementById('roleAvatar');
         const nm = document.getElementById('roleName');
         const sb = document.getElementById('roleSub');
@@ -97,10 +95,6 @@ const mobileNav = [
         }
       }
       paintRole();
-      document.getElementById('roleSelect')?.addEventListener('change', (e) => {
-        setRole((e.target as HTMLSelectElement).value);
-        location.reload();
-      });
 
       function paintWeekPill() {
         const el = document.getElementById('weekPill');

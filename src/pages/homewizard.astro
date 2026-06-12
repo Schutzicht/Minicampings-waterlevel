@@ -74,8 +74,8 @@ const steps = [
 
 <script>
   import {
-    getCampings, currentWeek, readingsFor, previousMeterstand, verbruikOf,
-    readingForWeek, addOrUpdateReading,
+    getCampings, getCamping, currentWeek, readingsFor, previousMeterstand, verbruikOf,
+    readingForWeek, addOrUpdateReading, distributeOccupancy,
   } from '../lib/store';
   import { sparkSafeImg } from '../lib/ui';
 
@@ -100,10 +100,13 @@ const steps = [
     const last = rs[rs.length - 1];
     const base = last ? Math.max(2, verbruikOf(last)) : 6;
     const verbruik = Math.round(base * (0.96 + Math.random() * 0.12) * 10) / 10;
+    const bezetting = last ? last.bezetting : 0;
+    const c = getCamping(campingId);
     return {
       meterstand: Math.round((prev + verbruik) * 10) / 10,
       bezoekers: last ? Math.round(last.bezoekers * (0.95 + Math.random() * 0.14)) : 0,
-      bezetting: last ? last.bezetting : 0,
+      bezetting,
+      bezettingPerType: c ? distributeOccupancy(c.types, bezetting) : undefined,
     };
   }
 

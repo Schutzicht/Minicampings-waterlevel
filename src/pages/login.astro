@@ -1,0 +1,81 @@
+---
+import '../styles/global.css';
+import Logo from '../components/Logo.astro';
+import DockwizeMark from '../components/DockwizeMark.astro';
+import { getCampings } from '../lib/store';
+
+const campings = getCampings();
+const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '');
+const mono = (n: string) => short(n).replace("'t ", '').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+---
+<!doctype html>
+<html lang="nl" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>Inloggen · Peil</title>
+  </head>
+  <body class="min-h-full">
+    <div class="grid min-h-screen place-items-center px-4 py-10">
+      <div class="w-full max-w-md">
+        <div class="flex items-center justify-between">
+          <a href="/"><Logo /></a>
+          <span class="flex items-center gap-1.5 text-xs font-medium text-faint"><DockwizeMark size={16} /> WaterWijs</span>
+        </div>
+
+        <div class="card mt-5 p-6 shadow-soft">
+          <h1 class="font-display text-xl font-bold tracking-tight text-ink">Inloggen</h1>
+          <p class="mt-1 text-sm text-muted">Kies je account. Je ziet en beheert alleen wat bij jouw rol hoort.</p>
+
+          <div class="mt-5 space-y-2">
+            <button data-role="regio" class="account-btn">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-[var(--color-ink)] text-[11px] font-bold text-white">RZ</span>
+              <span class="min-w-0 flex-1 text-left">
+                <span class="block text-sm font-semibold text-ink">Regio Zeeland</span>
+                <span class="block text-xs text-faint">Beheerder · alle campings</span>
+              </span>
+              <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+
+            <p class="px-1 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-faint">Camping-eigenaren</p>
+            {campings.map((c) => (
+              <button data-role={c.id} class="account-btn">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-[var(--color-accent-soft)] text-[11px] font-bold text-ink">{mono(c.naam)}</span>
+                <span class="min-w-0 flex-1 text-left">
+                  <span class="block truncate text-sm font-semibold text-ink">{short(c.naam)}</span>
+                  <span class="block text-xs text-faint">Eigenaar · {c.plaats}</span>
+                </span>
+                <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
+            ))}
+          </div>
+
+          <p class="mt-5 border-t border-line-soft pt-4 text-xs leading-relaxed text-faint">
+            Demo: kies een account om te ervaren wat die gebruiker ziet. In productie logt elke camping in met eigen
+            gegevens en kan niemand bij de cijfers van een ander.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .account-btn { display: flex; width: 100%; align-items: center; gap: 0.75rem; border-radius: 12px; border: 1px solid var(--color-border); background: #fff; padding: 0.7rem 0.85rem; transition: border-color .2s, background-color .2s, transform .15s var(--ease-out-soft); }
+      .account-btn:hover { border-color: var(--color-border-strong); background: var(--color-surface-2); }
+      .account-btn:active { transform: scale(0.99); }
+    </style>
+
+    <script>
+      import { setRole } from '../lib/store';
+      document.querySelectorAll<HTMLButtonElement>('[data-role]').forEach((b) =>
+        b.addEventListener('click', () => {
+          setRole(b.dataset.role!);
+          location.assign('/dashboard');
+        }),
+      );
+    </script>
+  </body>
+</html>

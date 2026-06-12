@@ -31,7 +31,8 @@ export interface Reading {
   week: number;
   meterstand: number; // m3, cumulatieve meterstand
   bezoekers: number; // gasten die week
-  bezetting: number; // bezette plekken die week (<= pitches)
+  bezetting: number; // bezette plekken die week (= som van bezettingPerType)
+  bezettingPerType?: Record<string, number>; // bezette plekken per plaatstype
   bron: Bron;
   datum: string; // ISO datum (maandag van de week)
 }
@@ -44,7 +45,7 @@ export interface AppState {
 }
 
 const STORAGE_KEY = 'peil:v1';
-const VERSION = 3;
+const VERSION = 4;
 const HISTORY_WEEKS = 10; // aantal weken seed-historie incl. huidige week
 const ROLE_KEY = 'peil:role';
 const REMINDER_KEY = 'peil:reminders';
@@ -142,6 +143,21 @@ function mulberry32(seed: number): () => number {
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const round1 = (v: number) => Math.round(v * 10) / 10;
 
+/** Verdeelt het aantal bezette plekken over de plaatstypes, naar rato van capaciteit. */
+export function distributeOccupancy(types: PlaatsType[], total: number): Record<string, number> {
+  const cap = types.reduce((s, t) => s + t.aantal, 0);
+  const res: Record<string, number> = {};
+  if (!cap) return res;
+  let assigned = 0;
+  types.forEach((t, idx) => {
+    const want = idx === types.length - 1 ? total - assigned : Math.round((total * t.aantal) / cap);
+    const n = clamp(want, 0, t.aantal);
+    res[t.id] = n;
+    assigned += n;
+  });
+  return res;
+}
+
 // -----------------------------------------------------------------------------
 // Seed
 // -----------------------------------------------------------------------------
@@ -174,6 +190,9 @@ function generateSeed(now = new Date()): AppState {
       // sommige campings hebben de huidige week nog niet ingevuld
       if (i === 0 && !c.submittedCurrent) continue;
 
+      const bezettingPerType = distributeOccupancy(c.types, bezetting);
+      const bezettingTotal = Object.values(bezettingPerType).reduce((s, n) => s + n, 0) || bezetting;
+
       const mon = mondayOfISOWeek(year, w);
       readings.push({
         id: `${c.id}-${year}-${w}`,
@@ -182,7 +201,8 @@ function generateSeed(now = new Date()): AppState {
         week: w,
         meterstand: meter,
         bezoekers,
-        bezetting,
+        bezetting: bezettingTotal,
+        bezettingPerType,
         bron: 'handmatig',
         datum: mon.toISOString().slice(0, 10),
       });
@@ -305,6 +325,7 @@ export interface ReadingInput {
   meterstand: number;
   bezoekers: number;
   bezetting: number;
+  bezettingPerType?: Record<string, number>;
   bron?: Bron;
 }
 
@@ -322,6 +343,7 @@ export function addOrUpdateReading(input: ReadingInput): Reading {
     meterstand: input.meterstand,
     bezoekers: input.bezoekers,
     bezetting: input.bezetting,
+    bezettingPerType: input.bezettingPerType,
     bron: input.bron ?? 'handmatig',
     datum: mon.toISOString().slice(0, 10),
   };
