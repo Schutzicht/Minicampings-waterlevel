@@ -1,0 +1,25 @@
+---
+// Peil-merkicoon: twee waterdruppels (groot + klein), lijnstijl.
+interface Props {
+  size?: number; // hoogte in px
+  class?: string;
+}
+const { size = 30, class: cls = '' } = Astro.props;
+const w = Math.round((size * 40) / 48);
+---
+<svg
+  width={w}
+  height={size}
+  viewBox="0 0 40 48"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="3"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class={cls}
+  aria-hidden="true"
+>
+  <path d="M15 9 C 11 17 4 24 4 33 A 11 11 0 1 0 26 33 C 26 24 19 17 15 9 Z" />
+  <path d="M9 30 V35 a3.5 3.5 0 0 0 3.5 3.5" />
+  <path d="M32 4 C 30 8 26.5 11 26.5 14.5 A 5.5 5.5 0 1 0 37.5 14.5 C 37.5 11 34 8 32 4 Z" />
+</svg>
