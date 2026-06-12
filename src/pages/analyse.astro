@@ -6,7 +6,7 @@ import Icon from '../components/Icon.astro';
   active="analyse"
   eyebrow="Vergelijken"
   title="Analyse"
-  subtitle="Zet de campings naast elkaar. Liter per gast laat zien hoe zuinig een locatie met water omgaat, los van hoe druk het is."
+  subtitle="Vergelijk je verbruik met dat van andere campings. Wat valt op en waar kun je bijsturen?"
 >
   <section class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
     <div class="card p-4 sm:p-5">
@@ -77,12 +77,13 @@ import Icon from '../components/Icon.astro';
 </AppLayout>
 
 <script>
-  import { benchmark, campingWeekly, fmt1, fmtInt, fmtPct } from '../lib/store';
+  import { benchmark, campingWeekly, roleScope, fmt1, fmtInt, fmtPct } from '../lib/store';
   import { renderBarChart, renderAreaChart } from '../lib/charts';
   import { effColor, effLabel } from '../lib/ui';
 
   function render() {
     const rows = benchmark();
+    const mineId = roleScope().campingId;
     const set = (id: string, v: string) => { const el = document.getElementById(id); if (el) el.textContent = v; };
 
     const best = rows[0];
@@ -102,7 +103,7 @@ import Icon from '../components/Icon.astro';
     renderBarChart(
       document.getElementById('benchChart')!,
       rows.map((r) => ({
-        label: r.camping.naam.replace('Minicamping ', '').replace('Boerderijcamping ', ''),
+        label: r.camping.naam.replace('Minicamping ', '').replace('Boerderijcamping ', '') + (r.camping.id === mineId ? ' (jij)' : ''),
         sub: `${r.camping.plaats} · ${effLabel(r.literPerBezoeker)}`,
         value: Math.round(r.literPerBezoeker),
         color: effColor(r.literPerBezoeker),
@@ -132,9 +133,9 @@ import Icon from '../components/Icon.astro';
     // ranking
     const body = document.getElementById('rankBody')!;
     body.innerHTML = rows
-      .map((r, i) => `<tr class="border-b border-line-soft last:border-0">
+      .map((r, i) => `<tr class="border-b border-line-soft last:border-0 ${r.camping.id === mineId ? 'bg-[var(--color-accent-soft)]' : ''}">
         <td class="px-5 py-3"><span class="grid h-6 w-6 place-items-center rounded-full text-xs font-bold ${i === 0 ? 'bg-good-soft text-good' : 'bg-line-soft text-muted'}">${i + 1}</span></td>
-        <td class="px-3 py-3"><span class="font-semibold text-deep">${r.camping.naam}</span><span class="block text-xs text-faint">${r.camping.plaats}</span></td>
+        <td class="px-3 py-3"><span class="font-semibold text-deep">${r.camping.naam}${r.camping.id === mineId ? ' <span class="text-[10px] font-bold uppercase tracking-wide text-ink-3">· jij</span>' : ''}</span><span class="block text-xs text-faint">${r.camping.plaats}</span></td>
         <td class="px-3 py-3 text-right tnum font-bold" style="color:${effColor(r.literPerBezoeker)}">${fmtInt(r.literPerBezoeker)}</td>
         <td class="px-3 py-3 text-right tnum text-deep">${fmt1(r.verbruikGem)} m³</td>
         <td class="px-3 py-3 text-right tnum text-deep">${fmtPct(r.bezettingGem)}</td>

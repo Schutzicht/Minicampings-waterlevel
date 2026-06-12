@@ -6,12 +6,20 @@
 
 export type Bron = 'handmatig' | 'homewizard';
 
+export interface PlaatsType {
+  id: string;
+  label: string;
+  aantal: number;
+}
+
 export interface Camping {
   id: string;
   slug: string;
   naam: string;
   plaats: string;
-  pitches: number; // max kampeerplekken (kleinschalig kamperen: <= 25)
+  pitches: number; // totaal aantal plekken (= som van de types)
+  types: PlaatsType[]; // staplaatsen, camperplaatsen, chalets, ...
+  winterkamperen: boolean;
   cover: string; // /images/...
   meterStart: number; // meterstand (m3) net voor het eerste opgeslagen weeknummer
 }
@@ -36,8 +44,10 @@ export interface AppState {
 }
 
 const STORAGE_KEY = 'peil:v1';
-const VERSION = 1;
+const VERSION = 2;
 const HISTORY_WEEKS = 10; // aantal weken seed-historie incl. huidige week
+const ROLE_KEY = 'peil:role';
+const REMINDER_KEY = 'peil:reminders';
 
 // -----------------------------------------------------------------------------
 // Camping-metadata (seed)
@@ -48,13 +58,20 @@ interface CampingSeed extends Camping {
   submittedCurrent: boolean; // heeft deze camping de huidige week al ingevuld?
 }
 
+const tp = (staplaats: number, camperplaats: number, chalet = 0): PlaatsType[] => {
+  const out: PlaatsType[] = [{ id: 'staplaats', label: 'Toeristische staplaats', aantal: staplaats }];
+  if (camperplaats) out.push({ id: 'camperplaats', label: 'Camperplaats', aantal: camperplaats });
+  if (chalet) out.push({ id: 'chalet', label: 'Chalet / huuraccommodatie', aantal: chalet });
+  return out;
+};
+
 const CAMPING_SEED: CampingSeed[] = [
-  { id: 'zonnehoek', slug: 'zonnehoek', naam: 'Minicamping De Zonnehoek', plaats: 'Renesse', pitches: 25, cover: '/images/camping-zonnehoek.png', meterStart: 2840, eff: 300, submittedCurrent: true },
-  { id: 'weiland', slug: 'weiland', naam: "Minicamping 't Weiland", plaats: 'Burgh-Haamstede', pitches: 20, cover: '/images/camping-weiland.png', meterStart: 1960, eff: 380, submittedCurrent: true },
-  { id: 'boomgaard', slug: 'boomgaard', naam: 'Minicamping De Boomgaard', plaats: 'Zoutelande', pitches: 24, cover: '/images/camping-boomgaard.png', meterStart: 3320, eff: 455, submittedCurrent: false },
-  { id: 'achterdedijk', slug: 'achterdedijk', naam: 'Boerderijcamping Achter de Dijk', plaats: 'Kamperland', pitches: 15, cover: '/images/camping-achterdedijk.png', meterStart: 1170, eff: 335, submittedCurrent: true },
-  { id: 'duinzicht', slug: 'duinzicht', naam: 'Minicamping Duinzicht', plaats: 'Oostkapelle', pitches: 25, cover: '/images/camping-duinzicht.png', meterStart: 3015, eff: 415, submittedCurrent: false },
-  { id: 'rietkraag', slug: 'rietkraag', naam: 'Minicamping De Rietkraag', plaats: 'Sint-Annaland', pitches: 18, cover: '/images/camping-rietkraag.png', meterStart: 1545, eff: 360, submittedCurrent: false },
+  { id: 'zonnehoek', slug: 'zonnehoek', naam: 'Minicamping De Zonnehoek', plaats: 'Renesse', pitches: 25, types: tp(18, 4, 3), winterkamperen: false, cover: '/images/camping-zonnehoek.png', meterStart: 2840, eff: 300, submittedCurrent: true },
+  { id: 'weiland', slug: 'weiland', naam: "Minicamping 't Weiland", plaats: 'Burgh-Haamstede', pitches: 20, types: tp(16, 4), winterkamperen: false, cover: '/images/camping-weiland.png', meterStart: 1960, eff: 380, submittedCurrent: true },
+  { id: 'boomgaard', slug: 'boomgaard', naam: 'Minicamping De Boomgaard', plaats: 'Zoutelande', pitches: 24, types: tp(17, 4, 3), winterkamperen: true, cover: '/images/camping-boomgaard.png', meterStart: 3320, eff: 455, submittedCurrent: false },
+  { id: 'achterdedijk', slug: 'achterdedijk', naam: 'Boerderijcamping Achter de Dijk', plaats: 'Kamperland', pitches: 15, types: tp(11, 4), winterkamperen: false, cover: '/images/camping-achterdedijk.png', meterStart: 1170, eff: 335, submittedCurrent: true },
+  { id: 'duinzicht', slug: 'duinzicht', naam: 'Minicamping Duinzicht', plaats: 'Oostkapelle', pitches: 25, types: tp(16, 5, 4), winterkamperen: true, cover: '/images/camping-duinzicht.png', meterStart: 3015, eff: 415, submittedCurrent: false },
+  { id: 'rietkraag', slug: 'rietkraag', naam: 'Minicamping De Rietkraag', plaats: 'Sint-Annaland', pitches: 18, types: tp(14, 4), winterkamperen: false, cover: '/images/camping-rietkraag.png', meterStart: 1545, eff: 360, submittedCurrent: false },
 ];
 
 // -----------------------------------------------------------------------------
@@ -511,3 +528,102 @@ export const fmtM3 = (n: number) => `${nf1.format(n)} m³`;
 export const fmtL = (n: number) => `${nf0.format(Math.round(n))} L`;
 export const fmtPct = (n: number) => `${Math.round(n)}%`;
 export const fmtDelta = (n: number | null) => (n === null ? '-' : `${n > 0 ? '+' : ''}${nf0.format(Math.round(n))}%`);
+
+// -----------------------------------------------------------------------------
+// Campingbeheer (eigenschappen)
+// -----------------------------------------------------------------------------
+
+export function totalCapacity(c: Camping): number {
+  return c.types?.length ? c.types.reduce((s, t) => s + (t.aantal || 0), 0) : c.pitches;
+}
+
+export interface CampingPatch {
+  naam?: string;
+  plaats?: string;
+  winterkamperen?: boolean;
+  types?: PlaatsType[];
+}
+
+export function updateCamping(id: string, patch: CampingPatch): Camping | undefined {
+  const state = load();
+  const c = state.campings.find((x) => x.id === id);
+  if (!c) return undefined;
+  if (patch.naam !== undefined) c.naam = patch.naam;
+  if (patch.plaats !== undefined) c.plaats = patch.plaats;
+  if (patch.winterkamperen !== undefined) c.winterkamperen = patch.winterkamperen;
+  if (patch.types !== undefined) {
+    c.types = patch.types;
+    c.pitches = patch.types.reduce((s, t) => s + (t.aantal || 0), 0);
+  }
+  save(state);
+  return c;
+}
+
+// -----------------------------------------------------------------------------
+// Rol / toegang (demo): 'regio' = beheerder, anders een campingId (eigenaar)
+// -----------------------------------------------------------------------------
+
+export type Role = 'regio' | string;
+
+export function getRole(): Role {
+  if (typeof localStorage === 'undefined') return 'regio';
+  return localStorage.getItem(ROLE_KEY) || 'regio';
+}
+
+export function setRole(role: Role): void {
+  if (typeof localStorage !== 'undefined') localStorage.setItem(ROLE_KEY, role);
+}
+
+export interface Scope {
+  isRegio: boolean;
+  campingId: string | null;
+  camping: Camping | null;
+}
+
+export function roleScope(): Scope {
+  const role = getRole();
+  if (role === 'regio') return { isRegio: true, campingId: null, camping: null };
+  const camping = getCamping(role) ?? null;
+  if (!camping) return { isRegio: true, campingId: null, camping: null };
+  return { isRegio: false, campingId: camping.id, camping };
+}
+
+export function scopedCampings(): Camping[] {
+  const s = roleScope();
+  return s.isRegio ? getCampings() : getCampings().filter((c) => c.id === s.campingId);
+}
+
+// -----------------------------------------------------------------------------
+// Herinneringen (demo-prefs per camping)
+// -----------------------------------------------------------------------------
+
+export interface ReminderPrefs {
+  email: boolean;
+  adres: string;
+  dag: string; // 'ma' .. 'zo'
+  push: boolean;
+}
+
+const DEFAULT_REMINDER: ReminderPrefs = { email: true, adres: '', dag: 'ma', push: false };
+
+export function getReminderPrefs(campingId: string): ReminderPrefs {
+  if (typeof localStorage === 'undefined') return { ...DEFAULT_REMINDER };
+  try {
+    const all = JSON.parse(localStorage.getItem(REMINDER_KEY) || '{}');
+    return { ...DEFAULT_REMINDER, ...(all[campingId] || {}) };
+  } catch {
+    return { ...DEFAULT_REMINDER };
+  }
+}
+
+export function setReminderPrefs(campingId: string, prefs: ReminderPrefs): void {
+  if (typeof localStorage === 'undefined') return;
+  let all: Record<string, ReminderPrefs> = {};
+  try {
+    all = JSON.parse(localStorage.getItem(REMINDER_KEY) || '{}');
+  } catch {
+    all = {};
+  }
+  all[campingId] = prefs;
+  localStorage.setItem(REMINDER_KEY, JSON.stringify(all));
+}

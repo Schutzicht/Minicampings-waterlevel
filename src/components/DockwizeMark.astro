@@ -1,0 +1,18 @@
+---
+interface Props {
+  size?: number;
+}
+const { size = 22 } = Astro.props;
+---
+<svg viewBox="91 -3 56 56" xmlns="http://www.w3.org/2000/svg" width={size} height={size} aria-label="Dockwize">
+  <path
+    fill="#ffda00"
+    d="M348.682,391.4H322.8v50h25.882a25,25,0,1,0,0-50Zm-.084,37.479h-5.042l-8.319,8.319V403.837H348.6a12.521,12.521,0,1,1,0,25.042Z"
+    transform="translate(-229.607 -391.4)"
+  />
+  <g transform="translate(109.832 23.782)">
+    <path fill="#1d1d1b" d="M351.049,423.4a1.849,1.849,0,1,0-1.849-1.849A1.865,1.865,0,0,0,351.049,423.4Z" transform="translate(-343.654 -419.7)" />
+    <ellipse fill="#1d1d1b" cx="1.849" cy="1.849" rx="1.849" ry="1.849" />
+    <ellipse fill="#1d1d1b" cx="1.849" cy="1.849" rx="1.849" ry="1.849" transform="translate(11.092 0)" />
+  </g>
+</svg>

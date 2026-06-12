@@ -111,7 +111,7 @@ import Icon from '../components/Icon.astro';
 <script>
   import {
     getCampings, getCamping, currentWeek, weekRangeLabel, readingForWeek,
-    previousMeterstand, addOrUpdateReading, currentWeekStatus, load,
+    previousMeterstand, addOrUpdateReading, currentWeekStatus, load, roleScope,
     fmt1, fmtInt,
   } from '../lib/store';
   import { effColor, effLabel } from '../lib/ui';
@@ -142,6 +142,16 @@ import Icon from '../components/Icon.astro';
   const pre = params.get('camping');
   if (pre && campings.some((c) => c.slug === pre)) campingSel.value = pre;
 
+  // rol-scope: eigenaar mag alleen de eigen camping invullen
+  const scope = roleScope();
+  if (!scope.isRegio && scope.campingId) {
+    const own = getCamping(scope.campingId);
+    if (own) campingSel.value = own.slug;
+    campingSel.disabled = true;
+    campingSel.classList.add('cursor-not-allowed', 'opacity-60');
+    document.getElementById('f-skip')?.classList.add('hidden');
+  }
+
   function selectedCamping() {
     return getCamping(campingSel.value)!;
   }
@@ -154,7 +164,9 @@ import Icon from '../components/Icon.astro';
     const prev = previousMeterstand(c.id, year, week);
 
     $('f-meter-hint').textContent = `Vorige stand: ${fmt1(prev)} m³`;
-    $<HTMLElement>('f-bez-hint').textContent = `0 t/m ${c.pitches} plekken`;
+    const shortType = (id: string) => (id === 'staplaats' ? 'staplaatsen' : id === 'camperplaats' ? 'camperplaatsen' : id === 'chalet' ? 'chalets' : id);
+    const typeStr = c.types.map((t) => `${t.aantal} ${shortType(t.id)}`).join(' · ');
+    $<HTMLElement>('f-bez-hint').textContent = `0 t/m ${c.pitches} plekken · ${typeStr}`;
 
     const note = $('f-edit-note');
     if (existing) {
@@ -275,9 +287,11 @@ import Icon from '../components/Icon.astro';
     (window as any).peilToast?.(`Opgeslagen voor ${c.naam.replace('Minicamping ', '')}`);
     renderRecent();
 
-    // ga door naar de volgende open camping van deze week
-    const next = nextOpen(c.slug);
-    if (next && week === cur) { campingSel.value = next; }
+    // ga door naar de volgende open camping van deze week (alleen voor de beheerder)
+    if (scope.isRegio) {
+      const next = nextOpen(c.slug);
+      if (next && week === cur) campingSel.value = next;
+    }
     syncFormFromState();
   });
 

@@ -1,11 +1,14 @@
 ---
 import Logo from './Logo.astro';
+import { getCampings } from '../lib/store';
 
 interface Props {
   title?: string;
   subtitle?: string;
 }
 const { title, subtitle } = Astro.props;
+const campings = getCampings();
+const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '');
 ---
 <header class="glass sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 sm:px-5">
   <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -28,14 +31,23 @@ const { title, subtitle } = Astro.props;
       <span class="tnum">Deze week</span>
     </a>
 
+    <a href="/instellingen" aria-label="Instellingen" class="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-2)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] md:hidden">
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7-3a7 7 0 0 0-.1-1.2l2-1.6-2-3.5-2.4.9a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.4a7 7 0 0 0-2 1.2l-2.4-.9-2 3.5 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.5 2.4-.9a7 7 0 0 0 2 1.2L10 21h4l.5-2.4a7 7 0 0 0 2-1.2l2.4.9 2-3.5-2-1.6a7 7 0 0 0 .1-1.2z"/></svg>
+    </a>
+
     <slot name="action" />
 
-    <div class="flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 pl-1 pr-2.5">
-      <span class="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-ink)] text-[11px] font-semibold text-white">RZ</span>
-      <div class="hidden flex-col leading-none sm:flex">
-        <span class="text-[12px] font-medium text-[var(--color-ink)]">Regio Zeeland</span>
-        <span class="mt-0.5 text-[10px] uppercase tracking-wider text-[var(--color-ink-3)]">Beheerder</span>
-      </div>
-    </div>
+    <label class="relative flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 pl-1 pr-6 transition-colors hover:border-[var(--color-border-strong)]">
+      <span id="roleAvatar" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--color-ink)] text-[11px] font-semibold text-white">RZ</span>
+      <span class="hidden flex-col leading-none sm:flex">
+        <span id="roleName" class="text-[12px] font-medium text-[var(--color-ink)]">Regio Zeeland</span>
+        <span id="roleSub" class="mt-0.5 text-[10px] uppercase tracking-wider text-[var(--color-ink-3)]">Beheerder</span>
+      </span>
+      <select id="roleSelect" aria-label="Schakel rol" class="absolute inset-0 cursor-pointer opacity-0">
+        <option value="regio">Regio Zeeland (beheerder)</option>
+        {campings.map((c) => <option value={c.id}>{short(c.naam)} (eigenaar)</option>)}
+      </select>
+      <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-[var(--color-ink-3)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </label>
   </div>
 </header>

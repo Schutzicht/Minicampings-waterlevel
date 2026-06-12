@@ -1,15 +1,16 @@
 ---
 import '../styles/global.css';
 import Logo from '../components/Logo.astro';
+import DockwizeMark from '../components/DockwizeMark.astro';
 
 interface Props {
   title?: string;
   description?: string;
 }
-const { title = 'Peil · watermonitoring voor minicampings', description = 'Leg wekelijks de waterstand, bezoekers en bezetting van minicampings in de regio vast. Zie verbruik per gast, vergelijk locaties en koppel straks je HomeWizard.' } = Astro.props;
+const { title = 'Peil | Watermonitoring — WaterWijs (Dockwize)', description = 'Peil helpt jou als camping-eigenaar grip te krijgen op je waterverbruik. Leg wekelijks de waterstand, bezoekers en bezetting vast en zie direct je verbruik per gast. Onderdeel van WaterWijs, een programma van Dockwize.' } = Astro.props;
 
 const links = [
-  { label: 'Het probleem', href: '#probleem' },
+  { label: 'Waarom Peil?', href: '#waarom' },
   { label: 'Hoe het werkt', href: '#werkt' },
   { label: 'Functies', href: '#functies' },
   { label: 'HomeWizard', href: '#homewizard' },
@@ -33,7 +34,12 @@ const links = [
   <body class="min-h-screen text-ink">
     <header id="siteNav" class="fixed inset-x-0 top-0 z-50 transition-all duration-300">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
-        <a href="/" aria-label="Peil home"><Logo /></a>
+        <div class="flex items-center gap-3">
+          <a href="/" aria-label="Peil home"><Logo /></a>
+          <span class="hidden items-center gap-1.5 border-l border-line pl-3 text-xs font-medium text-faint lg:flex">
+            <DockwizeMark size={16} /> WaterWijs · Dockwize
+          </span>
+        </div>
         <nav class="hidden items-center gap-7 md:flex">
           {links.map((l) => (
             <a href={l.href} class="text-sm font-semibold text-muted transition-colors hover:text-brand">{l.label}</a>
@@ -50,7 +56,11 @@ const links = [
         <div class="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
             <Logo />
-            <p class="mt-3 max-w-xs text-sm text-muted">Watermonitoring voor minicampings in de regio. Inzicht in verbruik, week na week.</p>
+            <p class="mt-3 max-w-xs text-sm text-muted">Watermonitoring voor minicampings in de regio. Inzicht in je verbruik, week na week.</p>
+            <div class="mt-4 inline-flex items-center gap-2.5 rounded-[10px] border border-line bg-canvas px-3 py-2">
+              <DockwizeMark size={22} />
+              <span class="text-xs leading-tight text-muted">Onderdeel van <strong class="font-semibold text-ink">WaterWijs</strong><br />een programma van Dockwize</span>
+            </div>
           </div>
           <div class="flex flex-wrap gap-x-10 gap-y-3 text-sm">
             {links.map((l) => (

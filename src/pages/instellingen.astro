@@ -1,0 +1,242 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Icon from '../components/Icon.astro';
+import { getCampings } from '../lib/store';
+const campings = getCampings();
+const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '');
+const dagen = [
+  ['ma', 'Maandag'], ['di', 'Dinsdag'], ['wo', 'Woensdag'], ['do', 'Donderdag'],
+  ['vr', 'Vrijdag'], ['za', 'Zaterdag'], ['zo', 'Zondag'],
+];
+---
+<AppLayout
+  active="instellingen"
+  title="Instellingen"
+  subtitle="Stel je camping eenmalig in. Daarna vul je elke week alleen nog de waterstand, bezoekers en bezetting in."
+>
+  <div id="regioPicker" class="mb-4 hidden">
+    <label class="flex flex-col gap-1.5 sm:max-w-sm">
+      <span class="text-sm font-semibold text-deep">Camping bewerken</span>
+      <select id="ip-camping" class="rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink">
+        {campings.map((c) => <option value={c.id}>{c.naam} · {c.plaats}</option>)}
+      </select>
+    </label>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-5">
+    <!-- Campingprofiel -->
+    <section class="card reveal p-5 sm:p-6 lg:col-span-3">
+      <div class="flex items-center gap-2">
+        <span class="grid h-8 w-8 place-items-center rounded-[9px] bg-surface-2 text-ink-2"><Icon name="tent" size={17} /></span>
+        <div>
+          <h2 class="font-display text-base font-bold text-ink">Campingprofiel</h2>
+          <p class="text-xs text-faint">Eenmalig instellen</p>
+        </div>
+      </div>
+
+      <div class="mt-5 grid gap-4 sm:grid-cols-2">
+        <label class="block">
+          <span class="mb-1.5 block text-sm font-semibold text-deep">Naam</span>
+          <input id="p-naam" type="text" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
+        </label>
+        <label class="block">
+          <span class="mb-1.5 block text-sm font-semibold text-deep">Plaats</span>
+          <input id="p-plaats" type="text" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
+        </label>
+      </div>
+
+      <div class="mt-5">
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-semibold text-deep">Soorten plekken</span>
+          <span class="text-xs text-faint">Totaal: <span id="p-total" class="tnum font-bold text-ink">0</span> plekken</span>
+        </div>
+        <div id="typeRows" class="mt-2 space-y-2"></div>
+        <button id="p-add-type" type="button" class="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-2 hover:text-ink">
+          <Icon name="invoer" size={15} /> Type toevoegen
+        </button>
+      </div>
+
+      <div class="mt-5 flex items-center justify-between rounded-[10px] border border-line bg-surface-2 px-4 py-3">
+        <div>
+          <p class="text-sm font-semibold text-deep">Winterkamperen</p>
+          <p class="text-xs text-faint">Camping ook in de winter open</p>
+        </div>
+        <button id="p-winter" type="button" role="switch" aria-checked="false" class="peil-switch"></button>
+      </div>
+
+      <button id="p-save" type="button" class="btn btn-primary mt-6 w-full py-2.5">Profiel opslaan</button>
+    </section>
+
+    <!-- Herinneringen -->
+    <section class="card reveal p-5 sm:p-6 lg:col-span-2">
+      <div class="flex items-center gap-2">
+        <span class="grid h-8 w-8 place-items-center rounded-[9px] bg-surface-2 text-ink-2"><Icon name="calendar" size={17} /></span>
+        <div>
+          <h2 class="font-display text-base font-bold text-ink">Herinneringen</h2>
+          <p class="text-xs text-faint">Zodat je geen week vergeet</p>
+        </div>
+      </div>
+
+      <div class="mt-5 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold text-deep">Wekelijkse e-mail</p>
+          <p class="text-xs text-faint">Een reminder om in te vullen</p>
+        </div>
+        <button id="r-email" type="button" role="switch" aria-checked="false" class="peil-switch"></button>
+      </div>
+      <label class="mt-3 block">
+        <span class="mb-1.5 block text-xs font-semibold text-deep">E-mailadres</span>
+        <input id="r-adres" type="email" placeholder="jij@camping.nl" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm font-medium text-ink" />
+      </label>
+      <label class="mt-3 block">
+        <span class="mb-1.5 block text-xs font-semibold text-deep">Verstuur op</span>
+        <select id="r-dag" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm font-medium text-ink">
+          {dagen.map(([v, l]) => <option value={v}>{l}</option>)}
+        </select>
+      </label>
+
+      <div class="mt-5 flex items-center justify-between border-t border-line-soft pt-5">
+        <div>
+          <p class="text-sm font-semibold text-deep">Browser-pushmelding</p>
+          <p class="text-xs text-faint">Melding op dit apparaat</p>
+        </div>
+        <button id="r-push" type="button" role="switch" aria-checked="false" class="peil-switch"></button>
+      </div>
+      <button id="r-test" type="button" class="btn btn-ghost mt-3 w-full py-2 text-sm">Stuur testmelding</button>
+
+      <button id="r-save" type="button" class="btn btn-primary mt-5 w-full py-2.5">Herinneringen opslaan</button>
+
+      <p class="mt-4 text-xs leading-relaxed text-faint">
+        In deze demo wordt de e-mail nog niet echt verstuurd, dat gebeurt straks op de server. De
+        browser-pushmelding kun je hier wel direct testen.
+      </p>
+    </section>
+  </div>
+</AppLayout>
+
+<style>
+  .peil-switch { position: relative; height: 26px; width: 46px; border-radius: 999px; background: var(--color-border-strong); transition: background .2s; flex-shrink: 0; }
+  .peil-switch::after { content: ''; position: absolute; top: 3px; left: 3px; height: 20px; width: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s var(--ease-out-soft); }
+  .peil-switch[aria-checked='true'] { background: var(--color-ink); }
+  .peil-switch[aria-checked='true']::after { transform: translateX(20px); }
+</style>
+
+<script>
+  import { getCamping, getCampings, updateCamping, roleScope, getReminderPrefs, setReminderPrefs } from '../lib/store';
+  import type { PlaatsType } from '../lib/store';
+
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  const toast = (m: string) => (window as any).peilToast?.(m);
+
+  const scope = roleScope();
+  let currentId = scope.isRegio ? getCampings()[0].id : scope.campingId!;
+
+  // regio-beheerder mag elke camping kiezen
+  if (scope.isRegio) {
+    $('regioPicker').classList.remove('hidden');
+    const sel = $<HTMLSelectElement>('ip-camping');
+    sel.value = currentId;
+    sel.addEventListener('change', () => { currentId = sel.value; loadProfile(); loadReminders(); });
+  }
+
+  function setSwitch(id: string, on: boolean) {
+    $(id).setAttribute('aria-checked', String(on));
+  }
+  function getSwitch(id: string) {
+    return $(id).getAttribute('aria-checked') === 'true';
+  }
+  document.querySelectorAll<HTMLButtonElement>('.peil-switch').forEach((b) =>
+    b.addEventListener('click', () => b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') !== 'true'))),
+  );
+
+  function recalcTotal() {
+    let total = 0;
+    document.querySelectorAll<HTMLInputElement>('[data-type-aantal]').forEach((i) => (total += parseInt(i.value || '0', 10)));
+    $('p-total').textContent = String(total);
+  }
+
+  function addTypeRow(t?: PlaatsType) {
+    const wrap = $('typeRows');
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2';
+    row.dataset.typeId = t?.id ?? `type${Date.now()}`;
+    row.innerHTML = `
+      <input data-type-label value="${t ? t.label : ''}" placeholder="Naam van het type" class="flex-1 rounded-[10px] border border-line bg-white px-3 py-2 text-sm font-medium text-ink" />
+      <input data-type-aantal type="number" min="0" value="${t ? t.aantal : 0}" class="tnum w-20 rounded-[10px] border border-line bg-white px-3 py-2 text-sm font-semibold text-ink" />
+      <button data-type-remove type="button" aria-label="Verwijder" class="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-line text-faint hover:border-high hover:text-high">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>`;
+    wrap.appendChild(row);
+    row.querySelector('[data-type-aantal]')!.addEventListener('input', recalcTotal);
+    row.querySelector('[data-type-remove]')!.addEventListener('click', () => { row.remove(); recalcTotal(); });
+    recalcTotal();
+  }
+
+  function loadProfile() {
+    const c = getCamping(currentId)!;
+    $<HTMLInputElement>('p-naam').value = c.naam;
+    $<HTMLInputElement>('p-plaats').value = c.plaats;
+    setSwitch('p-winter', c.winterkamperen);
+    $('typeRows').innerHTML = '';
+    c.types.forEach((t) => addTypeRow(t));
+    recalcTotal();
+  }
+
+  function saveProfile() {
+    const types: PlaatsType[] = [];
+    document.querySelectorAll<HTMLElement>('#typeRows > div').forEach((row) => {
+      const label = (row.querySelector('[data-type-label]') as HTMLInputElement).value.trim() || 'Type';
+      const aantal = parseInt((row.querySelector('[data-type-aantal]') as HTMLInputElement).value || '0', 10);
+      const id = row.dataset.typeId!;
+      if (aantal > 0) types.push({ id, label, aantal });
+    });
+    updateCamping(currentId, {
+      naam: $<HTMLInputElement>('p-naam').value.trim() || getCamping(currentId)!.naam,
+      plaats: $<HTMLInputElement>('p-plaats').value.trim(),
+      winterkamperen: getSwitch('p-winter'),
+      types: types.length ? types : getCamping(currentId)!.types,
+    });
+    toast('Profiel opgeslagen');
+  }
+
+  function loadReminders() {
+    const p = getReminderPrefs(currentId);
+    setSwitch('r-email', p.email);
+    setSwitch('r-push', p.push);
+    $<HTMLInputElement>('r-adres').value = p.adres;
+    $<HTMLSelectElement>('r-dag').value = p.dag;
+  }
+
+  function saveReminders() {
+    setReminderPrefs(currentId, {
+      email: getSwitch('r-email'),
+      push: getSwitch('r-push'),
+      adres: $<HTMLInputElement>('r-adres').value.trim(),
+      dag: $<HTMLSelectElement>('r-dag').value,
+    });
+    toast('Herinneringen opgeslagen');
+  }
+
+  async function testPush() {
+    if (!('Notification' in window)) { toast('Pushmeldingen niet ondersteund in deze browser'); return; }
+    let perm = Notification.permission;
+    if (perm === 'default') perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      new Notification('Peil, vergeet je waterstand niet', {
+        body: `Vul deze week de meterstand van ${getCamping(currentId)!.naam} in.`,
+        icon: '/favicon.svg',
+      });
+      setSwitch('r-push', true);
+    } else {
+      toast('Geen toestemming voor meldingen');
+    }
+  }
+
+  $('p-add-type').addEventListener('click', () => addTypeRow());
+  $('p-save').addEventListener('click', saveProfile);
+  $('r-save').addEventListener('click', saveReminders);
+  $('r-test').addEventListener('click', testPush);
+
+  loadProfile();
+  loadReminders();
+</script>

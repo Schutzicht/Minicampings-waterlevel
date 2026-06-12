@@ -7,7 +7,7 @@ import Icon from '../components/Icon.astro';
 interface Props {
   title: string;
   subtitle?: string;
-  active: 'dashboard' | 'invoer' | 'campings' | 'analyse' | 'homewizard';
+  active: 'dashboard' | 'invoer' | 'campings' | 'analyse' | 'homewizard' | 'instellingen';
   description?: string;
   eyebrow?: string;
   hideHeader?: boolean;
@@ -70,11 +70,45 @@ const mobileNav = [
     <div id="toast" class="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 md:bottom-8"></div>
 
     <script>
-      import { currentWeekStatus, resetDemo } from '../lib/store';
+      import { currentWeekStatus, resetDemo, getRole, setRole, getCamping, roleScope, currentWeek, readingForWeek } from '../lib/store';
+
+      // Rol-switcher (regio-beheerder vs camping-eigenaar)
+      const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '').replace(/^De |^'t /, '');
+      function paintRole() {
+        const sel = document.getElementById('roleSelect') as HTMLSelectElement | null;
+        const role = getRole();
+        if (sel) sel.value = role;
+        const av = document.getElementById('roleAvatar');
+        const nm = document.getElementById('roleName');
+        const sb = document.getElementById('roleSub');
+        if (role === 'regio') {
+          if (av) av.textContent = 'RZ';
+          if (nm) nm.textContent = 'Regio Zeeland';
+          if (sb) sb.textContent = 'Beheerder';
+        } else {
+          const c = getCamping(role);
+          const s = c ? short(c.naam) : 'Camping';
+          if (av) av.textContent = s.slice(0, 2).toUpperCase();
+          if (nm) nm.textContent = s;
+          if (sb) sb.textContent = 'Eigenaar';
+        }
+      }
+      paintRole();
+      document.getElementById('roleSelect')?.addEventListener('change', (e) => {
+        setRole((e.target as HTMLSelectElement).value);
+        location.reload();
+      });
 
       function paintWeekPill() {
         const el = document.getElementById('weekPill');
         if (!el) return;
+        const scope = roleScope();
+        if (!scope.isRegio && scope.camping) {
+          const { year, week } = currentWeek();
+          const done = !!readingForWeek(scope.camping.id, year, week);
+          el.innerHTML = `<span class="h-2 w-2 rounded-full ${done ? 'bg-[var(--color-good)]' : 'bg-[var(--color-warn)]'}"></span><span class="tnum">Week ${week} · ${done ? 'ingevuld' : 'open'}</span>`;
+          return;
+        }
         const s = currentWeekStatus();
         const total = s.ingevuld.length + s.open.length;
         const done = s.ingevuld.length;

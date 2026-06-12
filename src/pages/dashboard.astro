@@ -3,17 +3,16 @@ import AppLayout from '../layouts/AppLayout.astro';
 import Icon from '../components/Icon.astro';
 
 const kpis = [
-  { id: 'verbruik', label: 'Waterverbruik', unit: 'm³', sub: 'regio totaal' },
-  { id: 'lpb', label: 'Liter per gast', unit: 'L', sub: 'gemiddeld' },
-  { id: 'bezetting', label: 'Bezetting', unit: '%', sub: 'gemiddeld' },
-  { id: 'bezoekers', label: 'Bezoekers', unit: '', sub: 'regio totaal' },
+  { id: 'verbruik', label: 'Waterverbruik', unit: 'm³' },
+  { id: 'lpb', label: 'Liter per gast', unit: 'L' },
+  { id: 'bezetting', label: 'Bezetting', unit: '%' },
+  { id: 'bezoekers', label: 'Bezoekers', unit: '' },
 ];
 ---
 <AppLayout
   active="dashboard"
-  eyebrow="Overzicht"
   title="Dashboard"
-  subtitle="Het waterverbruik van alle aangesloten minicampings, afgezet tegen bezoekers en bezetting. Cijfers tonen de laatste volledige week."
+  subtitle="Waterverbruik per week, afgezet tegen bezoekers en bezetting."
 >
   <a slot="actions" href="/invoer" class="btn btn-primary px-3.5 py-2 text-sm">
     <Icon name="invoer" size={17} /> <span class="hidden sm:inline">Nieuwe invoer</span><span class="sm:hidden">Invoer</span>
@@ -31,7 +30,7 @@ const kpis = [
           <span id={`kpi-${k.id}`} class="tnum font-display text-3xl font-semibold text-ink sm:text-[2.1rem]">–</span>
           <span class="text-sm font-semibold text-faint">{k.unit}</span>
         </p>
-        <p class="mt-1 text-xs text-faint"><span>{k.sub}</span><span id={`kpi-${k.id}-wk`}></span></p>
+        <p class="mt-1 text-xs text-faint"><span id={`kpi-${k.id}-sub`}></span></p>
       </div>
     ))}
   </section>
@@ -41,10 +40,10 @@ const kpis = [
     <div class="card reveal p-5 lg:col-span-2">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 class="font-display text-lg font-bold text-ink">Verloop per week</h2>
-          <p class="text-xs text-faint">Hele regio · laatste 10 weken</p>
+          <h2 id="chartTitle" class="font-display text-lg font-bold text-ink">Verloop per week</h2>
+          <p id="chartSub" class="text-xs text-faint">laatste 10 weken</p>
         </div>
-        <div class="flex rounded-xl bg-line-soft p-1 text-xs font-semibold" role="tablist">
+        <div class="flex rounded-[10px] bg-line-soft p-1 text-xs font-semibold" role="tablist">
           <button data-metric="verbruik" class="metric-btn rounded-lg px-3 py-1.5">Verbruik</button>
           <button data-metric="bezoekers" class="metric-btn rounded-lg px-3 py-1.5">Bezoekers</button>
           <button data-metric="bezetting" class="metric-btn rounded-lg px-3 py-1.5">Bezetting</button>
@@ -57,24 +56,24 @@ const kpis = [
     <div class="card reveal flex flex-col p-5">
       <div class="flex items-center justify-between">
         <h2 class="font-display text-lg font-bold text-ink">Deze week</h2>
-        <span id="weekRange" class="chip bg-mist text-brand"></span>
+        <span id="weekRange" class="chip bg-mist text-ink-2"></span>
       </div>
       <div class="mt-4 flex items-center gap-4">
         <div id="weekRing"></div>
         <div>
           <p id="weekFrac" class="tnum font-display text-2xl font-semibold text-ink">–</p>
-          <p class="text-xs text-faint">campings ingevuld</p>
+          <p id="weekFracLabel" class="text-xs text-faint">campings ingevuld</p>
         </div>
       </div>
       <div id="weekOpen" class="mt-4 space-y-2"></div>
     </div>
   </section>
 
-  <!-- Per camping -->
+  <!-- Per camping / jouw positie -->
   <section class="mt-7 reveal">
     <div class="mb-3 flex items-end justify-between">
-      <h2 class="font-display text-lg font-bold text-ink">Per camping</h2>
-      <a href="/analyse" class="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline">
+      <h2 id="perTitle" class="font-display text-lg font-bold text-ink">Per camping</h2>
+      <a id="perLink" href="/analyse" class="inline-flex items-center gap-1 text-sm font-semibold text-ink-2 hover:text-ink">
         Vergelijk locaties <Icon name="right" size={15} />
       </a>
     </div>
@@ -84,134 +83,170 @@ const kpis = [
 
 <style>
   .metric-btn { color: var(--color-muted); transition: all .2s; }
-  .metric-btn[aria-selected='true'] { background: #fff; color: var(--color-brand); box-shadow: 0 1px 3px rgba(8,39,48,.12); }
+  .metric-btn[aria-selected='true'] { background: #fff; color: var(--color-ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 </style>
 
 <script>
   import {
     regionWeeklyTotals, getCampings, campingSummaries, currentWeekStatus,
-    weekRangeLabel, fmtInt, fmt1, fmtM3, fmtPct,
+    campingWeekly, readingForWeek, currentWeek, benchmark, roleScope,
+    weekRangeLabel, fmtInt, fmt1, fmtPct,
   } from '../lib/store';
-  import { renderAreaChart } from '../lib/charts';
-  import { trendBadge, miniBar, effColor, sparkSafeImg } from '../lib/ui';
-  import { sparklineSVG } from '../lib/charts';
+  import { renderAreaChart, sparklineSVG } from '../lib/charts';
+  import { trendBadge, effColor, sparkSafeImg } from '../lib/ui';
 
-  function pct(curr: number, prev: number): number | null {
-    return prev ? ((curr - prev) / prev) * 100 : null;
+  const set = (id: string, v: string) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const html = (id: string, v: string) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+  const pct = (curr: number, prev: number): number | null => (prev ? ((curr - prev) / prev) * 100 : null);
+  const shortNaam = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '');
+
+  type Pt = { jaar: number; week: number; label: string; verbruik: number; bezoekers: number; bezettingsgraad: number; campings: number };
+
+  function ring(pEl: string, fill: number, centerText: string) {
+    const r = 26, c = 2 * Math.PI * r;
+    html(pEl, `<svg width="68" height="68" viewBox="0 0 68 68">
+      <circle cx="34" cy="34" r="${r}" fill="none" stroke="#ececea" stroke-width="7"/>
+      <circle cx="34" cy="34" r="${r}" fill="none" stroke="#1d1d1b" stroke-width="7" stroke-linecap="round"
+        stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - fill)}" transform="rotate(-90 34 34)"/>
+      <text x="34" y="39" text-anchor="middle" font-size="15" font-weight="700" fill="#1d1d1b" font-family="Inter">${centerText}</text>
+    </svg>`);
   }
 
-  function render() {
+  function drawChartWith(series: Pt[], footPrefix: string) {
+    const chartEl = document.getElementById('regionChart')!;
+    const footEl = document.getElementById('regionFoot')!;
+    const metrics = {
+      verbruik: { s: series.map((t) => ({ label: `wk ${t.week}`, value: t.verbruik })), unit: ' m³', color: '#2563eb', foot: `${footPrefix} waterverbruik per week.` },
+      bezoekers: { s: series.map((t) => ({ label: `wk ${t.week}`, value: t.bezoekers })), unit: '', color: '#60a5fa', foot: `${footPrefix} aantal bezoekers per week.` },
+      bezetting: { s: series.map((t) => ({ label: `wk ${t.week}`, value: t.bezettingsgraad })), unit: '%', color: '#16a34a', foot: `${footPrefix} bezettingsgraad per week.` },
+    } as const;
+    let active: keyof typeof metrics = 'verbruik';
+    const draw = () => {
+      const m = metrics[active];
+      renderAreaChart(chartEl, m.s, { color: m.color, unit: m.unit, height: 250, valueFmt: (v) => (active === 'verbruik' ? fmt1(v) : fmtInt(v)) });
+      footEl.textContent = m.foot;
+      document.querySelectorAll<HTMLButtonElement>('.metric-btn').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.metric === active)));
+    };
+    document.querySelectorAll<HTMLButtonElement>('.metric-btn').forEach((b) =>
+      b.addEventListener('click', () => { active = b.dataset.metric as keyof typeof metrics; draw(); }),
+    );
+    draw();
+  }
+
+  function renderRegio() {
     const totals = regionWeeklyTotals();
     const totalCampings = getCampings().length;
-    // laatste volledige week (alle campings ingevuld)
     let li = totals.length - 1;
     while (li > 0 && totals[li].campings < totalCampings) li--;
     const last = totals[li];
     const prev = totals[li - 1];
+    const lpb = (p?: Pt) => (p && p.bezoekers ? (p.verbruik * 1000) / p.bezoekers : 0);
 
-    const lpb = (p?: typeof last) => (p && p.bezoekers ? (p.verbruik * 1000) / p.bezoekers : 0);
-
-    const set = (id: string, val: string) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    const html = (id: string, val: string) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
-
+    const wk = last ? ` · week ${last.week}` : '';
     if (last) {
-      set('kpi-verbruik', fmt1(last.verbruik));
-      html('kpi-verbruik-trend', trendBadge(prev ? pct(last.verbruik, prev.verbruik) : null, 'neutral'));
-      set('kpi-lpb', fmtInt(lpb(last)));
-      html('kpi-lpb-trend', trendBadge(prev ? pct(lpb(last), lpb(prev)) : null, 'lowerBetter'));
-      set('kpi-bezetting', fmtInt(last.bezettingsgraad));
-      html('kpi-bezetting-trend', trendBadge(prev ? pct(last.bezettingsgraad, prev.bezettingsgraad) : null, 'higherBetter'));
-      set('kpi-bezoekers', fmtInt(last.bezoekers));
-      html('kpi-bezoekers-trend', trendBadge(prev ? pct(last.bezoekers, prev.bezoekers) : null, 'higherBetter'));
-      const wk = ` · week ${last.week}`;
-      ['verbruik', 'lpb', 'bezetting', 'bezoekers'].forEach((id) => set(`kpi-${id}-wk`, wk));
+      set('kpi-verbruik', fmt1(last.verbruik)); html('kpi-verbruik-trend', trendBadge(prev ? pct(last.verbruik, prev.verbruik) : null, 'neutral')); set('kpi-verbruik-sub', `regio totaal${wk}`);
+      set('kpi-lpb', fmtInt(lpb(last))); html('kpi-lpb-trend', trendBadge(prev ? pct(lpb(last), lpb(prev)) : null, 'lowerBetter')); set('kpi-lpb-sub', `regio gemiddeld${wk}`);
+      set('kpi-bezetting', fmtInt(last.bezettingsgraad)); html('kpi-bezetting-trend', trendBadge(prev ? pct(last.bezettingsgraad, prev.bezettingsgraad) : null, 'higherBetter')); set('kpi-bezetting-sub', `regio gemiddeld${wk}`);
+      set('kpi-bezoekers', fmtInt(last.bezoekers)); html('kpi-bezoekers-trend', trendBadge(prev ? pct(last.bezoekers, prev.bezoekers) : null, 'higherBetter')); set('kpi-bezoekers-sub', `regio totaal${wk}`);
     }
 
-    // ---- chart met metric-switch ----
-    const chartEl = document.getElementById('regionChart')!;
-    const footEl = document.getElementById('regionFoot')!;
-    const metrics = {
-      verbruik: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.verbruik })), unit: ' m³', color: '#2563eb', foot: 'Totaal waterverbruik van alle campings samen, per week.' },
-      bezoekers: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.bezoekers })), unit: '', color: '#60a5fa', foot: 'Aantal bezoekers in de regio, per week.' },
-      bezetting: { series: totals.map((t) => ({ label: `wk ${t.week}`, value: t.bezettingsgraad })), unit: '%', color: '#16a34a', foot: 'Gemiddelde bezettingsgraad over alle campings, per week.' },
-    } as const;
-    let activeMetric: keyof typeof metrics = 'verbruik';
-    const drawChart = () => {
-      const m = metrics[activeMetric];
-      renderAreaChart(chartEl, m.series, { color: m.color, unit: m.unit, height: 250, valueFmt: (v) => (activeMetric === 'verbruik' ? fmt1(v) : fmtInt(v)) });
-      footEl.textContent = m.foot;
-      document.querySelectorAll<HTMLButtonElement>('.metric-btn').forEach((b) =>
-        b.setAttribute('aria-selected', String(b.dataset.metric === activeMetric)),
-      );
-    };
-    document.querySelectorAll<HTMLButtonElement>('.metric-btn').forEach((b) =>
-      b.addEventListener('click', () => { activeMetric = b.dataset.metric as keyof typeof metrics; drawChart(); }),
-    );
-    drawChart();
+    set('chartSub', 'Hele regio · laatste 10 weken');
+    drawChartWith(totals, 'Totaal in de regio:');
 
-    // ---- deze week ----
     const status = currentWeekStatus();
     set('weekRange', weekRangeLabel(status.jaar, status.week));
-    const done = status.ingevuld.length;
-    const total = done + status.open.length;
-    set('weekFrac', `${done}/${total}`);
-    // ring
-    const p = total ? done / total : 0;
-    const r = 26, c = 2 * Math.PI * r;
-    html('weekRing', `<svg width="68" height="68" viewBox="0 0 68 68">
-      <circle cx="34" cy="34" r="${r}" fill="none" stroke="#e6eef0" stroke-width="7"/>
-      <circle cx="34" cy="34" r="${r}" fill="none" stroke="#2563eb" stroke-width="7" stroke-linecap="round"
-        stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - p)}" transform="rotate(-90 34 34)"/>
-      <text x="34" y="39" text-anchor="middle" font-size="17" font-weight="800" fill="#1d1d1b" font-family="Inter Tight">${Math.round(p * 100)}<tspan font-size="10">%</tspan></text>
-    </svg>`);
+    const done = status.ingevuld.length, total = done + status.open.length;
+    set('weekFrac', `${done}/${total}`); set('weekFracLabel', 'campings ingevuld');
+    ring('weekRing', total ? done / total : 0, `${Math.round((total ? done / total : 0) * 100)}%`);
 
     const openEl = document.getElementById('weekOpen')!;
     if (status.open.length === 0) {
-      openEl.innerHTML = `<div class="flex items-center gap-2 rounded-xl bg-good-soft px-3 py-2.5 text-sm font-semibold text-good">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>
-        Alle campings hebben deze week ingevuld</div>`;
+      openEl.innerHTML = `<div class="flex items-center gap-2 rounded-[10px] bg-good-soft px-3 py-2.5 text-sm font-semibold text-good"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>Alle campings hebben ingevuld</div>`;
     } else {
       openEl.innerHTML = `<p class="text-xs font-semibold uppercase tracking-wider text-faint">Nog open</p>` +
-        status.open.map((s) => `
-        <a href="/invoer?camping=${s.camping.slug}" class="flex items-center justify-between rounded-xl border border-line px-3 py-2 transition-colors hover:border-brand-400 hover:bg-mist">
-          <span class="flex items-center gap-2 text-sm font-semibold text-deep"><span class="h-2 w-2 rounded-full bg-warn"></span>${s.camping.naam.replace('Minicamping ', '').replace('Boerderijcamping ', '')}</span>
-          <span class="text-xs font-semibold text-brand">Invullen</span>
-        </a>`).join('');
+        status.open.map((s) => `<a href="/invoer?camping=${s.camping.slug}" class="flex items-center justify-between rounded-[10px] border border-line px-3 py-2 transition-colors hover:border-border-strong hover:bg-surface-2">
+          <span class="flex items-center gap-2 text-sm font-semibold text-ink-2"><span class="h-2 w-2 rounded-full bg-warn"></span>${shortNaam(s.camping.naam)}</span>
+          <span class="text-xs font-semibold text-ink">Invullen</span></a>`).join('');
     }
 
-    // ---- per camping ----
     const list = document.getElementById('campingList')!;
-    const summaries = campingSummaries();
-    list.innerHTML = summaries.map((s) => {
-      const naam = s.camping.naam;
-      return `
-      <a href="/camping?c=${s.camping.slug}" class="card group flex flex-col gap-4 p-4 transition-shadow hover:shadow-soft sm:flex-row sm:items-center">
-        <div class="flex items-center gap-3 sm:w-60 sm:shrink-0">
-          <span class="water-grad relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl">
-            ${sparkSafeImg(s.camping.cover, naam)}
-          </span>
-          <span class="min-w-0">
-            <span class="block truncate font-semibold text-ink">${naam}</span>
-            <span class="block text-xs text-faint">${s.camping.plaats} · ${s.camping.pitches} plekken</span>
-          </span>
-        </div>
-        <div class="grid flex-1 grid-cols-3 gap-3 sm:max-w-sm">
-          <div><p class="text-[0.7rem] text-faint">Verbruik</p><p class="tnum text-sm font-bold text-deep">${fmt1(s.verbruikWeek)}<span class="text-[0.65rem] font-medium text-faint"> m³</span></p></div>
-          <div><p class="text-[0.7rem] text-faint">L/gast</p><p class="tnum text-sm font-bold" style="color:${effColor(s.literPerBezoeker)}">${fmtInt(s.literPerBezoeker)}</p></div>
-          <div><p class="text-[0.7rem] text-faint">Bezetting</p><p class="tnum text-sm font-bold text-deep">${fmtPct(s.bezettingsgraad)}</p></div>
-        </div>
-        <div class="hidden sm:block sm:w-28">${sparklineSVG(s.spark, { w: 112, h: 34, color: '#2563eb' })}</div>
-        <div class="flex items-center gap-2 sm:w-28 sm:justify-end">
-          <span class="chip ${s.submittedThisWeek ? 'bg-good-soft text-good' : 'bg-warn-soft text-warn'}">
-            <span class="h-1.5 w-1.5 rounded-full ${s.submittedThisWeek ? 'bg-good' : 'bg-warn'}"></span>
-            ${s.submittedThisWeek ? 'Bij' : 'Open'}
-          </span>
-          <svg class="text-faint transition-transform group-hover:translate-x-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-        </div>
-      </a>`;
-    }).join('');
+    list.innerHTML = campingSummaries().map((s) => cardRow(s)).join('');
+  }
+
+  function cardRow(s: ReturnType<typeof campingSummaries>[number]) {
+    return `<a href="/camping?c=${s.camping.slug}" class="card group flex flex-col gap-4 p-4 transition-shadow hover:shadow-soft sm:flex-row sm:items-center">
+      <div class="flex items-center gap-3 sm:w-60 sm:shrink-0">
+        <span class="water-grad relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl">${sparkSafeImg(s.camping.cover, s.camping.naam)}</span>
+        <span class="min-w-0"><span class="block truncate font-semibold text-ink">${s.camping.naam}</span><span class="block text-xs text-faint">${s.camping.plaats} · ${s.camping.pitches} plekken</span></span>
+      </div>
+      <div class="grid flex-1 grid-cols-3 gap-3 sm:max-w-sm">
+        <div><p class="text-[0.7rem] text-faint">Verbruik</p><p class="tnum text-sm font-bold text-ink">${fmt1(s.verbruikWeek)}<span class="text-[0.65rem] font-medium text-faint"> m³</span></p></div>
+        <div><p class="text-[0.7rem] text-faint">L/gast</p><p class="tnum text-sm font-bold" style="color:${effColor(s.literPerBezoeker)}">${fmtInt(s.literPerBezoeker)}</p></div>
+        <div><p class="text-[0.7rem] text-faint">Bezetting</p><p class="tnum text-sm font-bold text-ink">${fmtPct(s.bezettingsgraad)}</p></div>
+      </div>
+      <div class="hidden sm:block sm:w-28">${sparklineSVG(s.spark, { w: 112, h: 34, color: '#2563eb' })}</div>
+      <div class="flex items-center gap-2 sm:w-28 sm:justify-end">
+        <span class="chip ${s.submittedThisWeek ? 'bg-good-soft text-good' : 'bg-warn-soft text-warn'}"><span class="h-1.5 w-1.5 rounded-full ${s.submittedThisWeek ? 'bg-good' : 'bg-warn'}"></span>${s.submittedThisWeek ? 'Bij' : 'Open'}</span>
+        <svg class="text-faint transition-transform group-hover:translate-x-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    </a>`;
+  }
+
+  function renderEigenaar(c: NonNullable<ReturnType<typeof roleScope>['camping']>) {
+    const weekly = campingWeekly(c.id) as unknown as Pt[];
+    const last = weekly[weekly.length - 1];
+    const prev = weekly[weekly.length - 2];
+    const lpb = (p?: Pt) => (p && p.bezoekers ? (p.verbruik * 1000) / p.bezoekers : 0);
+    const wk = last ? ` · week ${last.week}` : '';
+
+    if (last) {
+      set('kpi-verbruik', fmt1(last.verbruik)); html('kpi-verbruik-trend', trendBadge(prev ? pct(last.verbruik, prev.verbruik) : null, 'neutral')); set('kpi-verbruik-sub', `jouw camping${wk}`);
+      set('kpi-lpb', fmtInt(lpb(last))); html('kpi-lpb-trend', trendBadge(prev ? pct(lpb(last), lpb(prev)) : null, 'lowerBetter')); set('kpi-lpb-sub', `jouw camping${wk}`);
+      set('kpi-bezetting', fmtInt(last.bezettingsgraad)); html('kpi-bezetting-trend', trendBadge(prev ? pct(last.bezettingsgraad, prev.bezettingsgraad) : null, 'higherBetter')); set('kpi-bezetting-sub', `jouw camping${wk}`);
+      set('kpi-bezoekers', fmtInt(last.bezoekers)); html('kpi-bezoekers-trend', trendBadge(prev ? pct(last.bezoekers, prev.bezoekers) : null, 'higherBetter')); set('kpi-bezoekers-sub', `jouw camping${wk}`);
+    }
+
+    set('chartTitle', 'Jouw verloop per week');
+    set('chartSub', `${shortNaam(c.naam)} · laatste 10 weken`);
+    drawChartWith(weekly, `${shortNaam(c.naam)}:`);
+
+    // deze week (eigen camping)
+    const { year, week } = currentWeek();
+    const reading = readingForWeek(c.id, year, week);
+    set('weekRange', weekRangeLabel(year, week));
+    set('weekFrac', reading ? 'Bij' : 'Open'); set('weekFracLabel', reading ? 'deze week ingevuld' : 'nog niet ingevuld');
+    ring('weekRing', reading ? 1 : 0, reading ? '✓' : '–');
+    const openEl = document.getElementById('weekOpen')!;
+    openEl.innerHTML = reading
+      ? `<a href="/invoer?camping=${c.slug}" class="flex items-center justify-between rounded-[10px] bg-good-soft px-3 py-2.5 text-sm font-semibold text-good">Week ${week} ingevuld <span class="text-xs underline">aanpassen</span></a>`
+      : `<a href="/invoer?camping=${c.slug}" class="btn btn-primary w-full py-2.5 text-sm">Vul week ${week} in</a>`;
+
+    // jouw positie in de regio
+    set('perTitle', 'Jouw positie in de regio');
+    const link = document.getElementById('perLink'); if (link) link.innerHTML = `Naar analyse <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+    const rows = benchmark();
+    const rank = rows.findIndex((r) => r.camping.id === c.id) + 1;
+    const mine = rows[rank - 1];
+    const regioAvg = rows.reduce((s, r) => s + r.literPerBezoeker * r.bezoekersTotaal, 0) / Math.max(1, rows.reduce((s, r) => s + r.bezoekersTotaal, 0));
+    const diff = mine ? Math.round(((mine.literPerBezoeker - regioAvg) / regioAvg) * 100) : 0;
+    const list = document.getElementById('campingList')!;
+    list.innerHTML = `<div class="card p-5">
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div><p class="text-xs text-faint">Jouw liter per gast</p><p class="tnum font-display text-2xl font-semibold" style="color:${effColor(mine ? mine.literPerBezoeker : 0)}">${mine ? fmtInt(mine.literPerBezoeker) : '–'}<span class="text-sm text-faint"> L</span></p></div>
+        <div><p class="text-xs text-faint">Regio gemiddelde</p><p class="tnum font-display text-2xl font-semibold text-ink">${fmtInt(regioAvg)}<span class="text-sm text-faint"> L</span></p></div>
+        <div><p class="text-xs text-faint">Jouw plek</p><p class="tnum font-display text-2xl font-semibold text-ink">${rank}<span class="text-sm text-faint"> / ${rows.length}</span></p></div>
+      </div>
+      <div class="mt-4 rounded-[10px] px-3 py-2.5 text-sm font-medium ${diff <= 0 ? 'bg-good-soft text-good' : 'bg-warn-soft text-warn'}">
+        ${diff <= 0 ? `Je zit ${Math.abs(diff)}% onder het regio-gemiddelde. Mooi, zuinig bezig.` : `Je zit ${diff}% boven het regio-gemiddelde. Hier valt mogelijk te besparen.`}
+      </div>
+    </div>`;
+  }
+
+  function render() {
+    const scope = roleScope();
+    if (scope.isRegio || !scope.camping) renderRegio();
+    else renderEigenaar(scope.camping);
   }
 
   render();
-  window.addEventListener('peil:change', render);
 </script>

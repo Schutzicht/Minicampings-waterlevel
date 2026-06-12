@@ -7,17 +7,27 @@ import AppLayout from '../layouts/AppLayout.astro';
   title="Campings"
   subtitle="De aangesloten minicampings in de regio. Klik een camping aan voor de volledige weekhistorie en grafieken."
 >
+  <div id="scopeNote" class="mb-4 hidden items-center gap-2 rounded-[10px] border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink-2"></div>
   <div id="campingGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
 </AppLayout>
 
 <script>
-  import { campingSummaries, fmt1, fmtInt, fmtPct } from '../lib/store';
+  import { campingSummaries, scopedCampings, roleScope, fmt1, fmtInt, fmtPct } from '../lib/store';
   import { sparklineSVG } from '../lib/charts';
   import { effColor, effLabel, sparkSafeImg, miniBar } from '../lib/ui';
 
   function render() {
+    const scope = roleScope();
+    const ids = new Set(scopedCampings().map((c) => c.id));
+    const note = document.getElementById('scopeNote')!;
+    if (!scope.isRegio) {
+      note.classList.remove('hidden'); note.classList.add('flex');
+      note.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Je bent ingelogd als eigenaar en ziet alleen je eigen camping.`;
+    } else {
+      note.classList.add('hidden'); note.classList.remove('flex');
+    }
     const grid = document.getElementById('campingGrid')!;
-    grid.innerHTML = campingSummaries().map((s) => `
+    grid.innerHTML = campingSummaries().filter((s) => ids.has(s.camping.id)).map((s) => `
       <a href="/camping?c=${s.camping.slug}" class="card reveal is-in group overflow-hidden transition-shadow hover:shadow-lift">
         <div class="relative h-36 w-full overflow-hidden water-grad">
           ${sparkSafeImg(s.camping.cover, s.camping.naam)}

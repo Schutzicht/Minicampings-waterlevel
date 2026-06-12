@@ -34,6 +34,7 @@ import AppLayout from '../layouts/AppLayout.astro';
     const seizoenBezoekers = weekly.reduce((s, w) => s + w.bezoekers, 0);
     const lpbSeizoen = seizoenBezoekers ? (seizoenVerbruik * 1000) / seizoenBezoekers : 0;
     const lpbLatest = latest ? literPerBezoeker(latest) : 0;
+    const shortType = (id: string) => (id === 'staplaats' ? 'staplaatsen' : id === 'camperplaats' ? 'camperplaatsen' : id === 'chalet' ? 'chalets' : id);
 
     const kpi = (label: string, value: string, unit: string, accent = 'text-ink', sub = '') => `
       <div class="card p-4">
@@ -60,6 +61,11 @@ import AppLayout from '../layouts/AppLayout.astro';
             <a href="/invoer?camping=${c.slug}" class="btn btn-primary hidden px-4 py-2 text-sm sm:inline-flex">Waterstand invoeren</a>
           </div>
         </div>
+      </div>
+
+      <div class="mt-3 flex flex-wrap gap-2">
+        ${c.types.map((t) => `<span class="chip bg-surface-2 text-ink-2">${t.aantal} ${shortType(t.id)}</span>`).join('')}
+        <span class="chip ${c.winterkamperen ? 'bg-good-soft text-good' : 'bg-line-soft text-faint'}">${c.winterkamperen ? 'Winterkamperen' : 'Geen winterkamperen'}</span>
       </div>
 
       <a href="/invoer?camping=${c.slug}" class="btn btn-primary mt-3 w-full py-2.5 sm:hidden">Waterstand invoeren</a>

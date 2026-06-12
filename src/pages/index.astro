@@ -1,26 +1,27 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Icon from '../components/Icon.astro';
+import DockwizeMark from '../components/DockwizeMark.astro';
 
-const probleem = [
-  { icon: 'clipboard', t: 'Schriftjes en losse Excels', d: 'Iedere camping houdt de meterstand anders bij. Cijfers raken kwijt, weken worden vergeten.' },
-  { icon: 'users', t: 'Geen verband met drukte', d: 'Een hoog verbruik zegt weinig zonder te weten hoeveel gasten er die week waren.' },
-  { icon: 'chart', t: 'Onmogelijk te vergelijken', d: 'Welke locatie is zuinig, welke verbruikt veel? Zonder eenduidige data blijft het gissen.' },
+const waarom = [
+  { icon: 'clipboard', t: 'Alles op één vaste plek', d: 'Leg je meterstand, bezoekers en bezetting wekelijks vast. Geen losse schriftjes of Excels meer, en je vergeet geen week.' },
+  { icon: 'droplet', t: 'Verbruik dat je begrijpt', d: 'Peil zet je waterverbruik af tegen je bezoekers, zodat je ziet wat normaal is voor jouw camping en wat niet.' },
+  { icon: 'leaf', t: 'Weten waar je kunt besparen', d: 'Zie waar water weglekt en stuur op tijd bij. Goed voor je kosten en goed voor het milieu.' },
 ];
 
 const stappen = [
-  { n: '1', t: 'Invoeren per week', d: 'Noteer de meterstand, het aantal bezoekers en de bezetting. In een halve minuut klaar.' },
-  { n: '2', t: 'Peil rekent uit', d: 'Verbruik, liter per gast en bezettingsgraad worden automatisch berekend.' },
-  { n: '3', t: 'Inzicht en vergelijk', d: 'Zie trends per week en vergelijk alle campings in de regio naast elkaar.' },
+  { n: '1', t: 'Jij vult in per week', d: 'Noteer je meterstand, het aantal bezoekers en de bezetting. In een halve minuut klaar.' },
+  { n: '2', t: 'Peil rekent uit', d: 'Je verbruik, liter per gast en bezettingsgraad worden automatisch voor je berekend.' },
+  { n: '3', t: 'Jij krijgt inzicht', d: 'Zie je trends per week en vergelijk je verbruik met dat van andere campings.' },
 ];
 
 const functies = [
-  { icon: 'calendar', t: 'Weekoverzicht', d: 'Verbruik, bezoekers en bezetting per week, in een helder dashboard.' },
-  { icon: 'droplet', t: 'Liter per gast', d: 'De eerlijke maat voor zuinigheid, los van hoe druk het is.' },
-  { icon: 'gauge', t: 'Bezettingsgraad', d: 'Zie hoe vol elke camping zit ten opzichte van het aantal plekken.' },
-  { icon: 'layers', t: 'Vergelijk locaties', d: 'Rangschik campings en spot uitschieters in een oogopslag.' },
-  { icon: 'trend', t: 'Trends per seizoen', d: 'Volg het verloop over de weken en herken pieken rond vakanties.' },
-  { icon: 'homewizard', t: 'HomeWizard-koppeling', d: 'Straks leest Peil de waterstand automatisch uit. Geen overtikken meer.', soon: true },
+  { icon: 'calendar', t: 'Weekoverzicht', d: 'Je verbruik, bezoekers en bezetting per week, in een helder dashboard.' },
+  { icon: 'droplet', t: 'Liter per gast', d: 'Een concrete maatstaf van verbruik, ongeacht hoe druk het is.' },
+  { icon: 'gauge', t: 'Bezettingsgraad', d: 'Zie hoe vol jouw camping zit ten opzichte van je eigen plekken.' },
+  { icon: 'layers', t: 'Vergelijk je verbruik', d: 'Vergelijk jouw verbruik met dat van anderen. Wat valt op en waar kun je bijsturen?' },
+  { icon: 'trend', t: 'Trends per seizoen', d: 'Volg je verloop over de weken en herken pieken rond vakanties.' },
+  { icon: 'homewizard', t: 'HomeWizard-koppeling', d: 'Straks leest Peil je waterstand automatisch uit. Geen overtikken meer.', soon: true },
 ];
 ---
 <SiteLayout>
@@ -31,13 +32,14 @@ const functies = [
 
     <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr]">
       <div class="reveal is-in">
-        <span class="chip border border-line bg-white text-brand"><span class="h-1.5 w-1.5 rounded-full bg-aqua"></span>Watermonitoring voor minicampings</span>
+        <span class="chip border border-line bg-white text-ink"><DockwizeMark size={15} /> WaterWijs, een programma van Dockwize</span>
         <h1 class="fluid-hero mt-5 font-semibold text-ink">
-          Grip op het <span class="rounded-md bg-[var(--color-accent-soft)] px-1.5 text-ink">waterverbruik</span> van campings in de regio
+          Grip op het <span class="rounded-md bg-[var(--color-accent-soft)] px-1.5 text-ink">waterverbruik</span> van jouw camping
         </h1>
         <p class="mt-5 max-w-xl text-lg leading-relaxed text-muted">
-          Leg wekelijks de waterstand, het aantal bezoekers en de bezetting vast. Peil maakt er direct
-          inzicht van: verbruik per gast, trends per week en een vergelijking tussen locaties.
+          Leg als camping-eigenaar elke week je waterstand, bezoekers en bezetting vast. Peil maakt er
+          direct inzicht van: je verbruik per gast, je trends per week en hoe je het doet ten opzichte
+          van andere campings in de regio.
         </p>
         <div class="mt-7 flex flex-col gap-3 sm:flex-row">
           <a href="/dashboard" class="btn btn-primary px-6 py-3 text-base">Open het dashboard <Icon name="right" size={18} /></a>
@@ -84,16 +86,16 @@ const functies = [
     </div>
   </section>
 
-  <!-- Probleem -->
-  <section id="probleem" class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+  <!-- Waarom Peil -->
+  <section id="waarom" class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
     <div class="reveal max-w-2xl">
-      <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Het probleem</p>
-      <h2 class="fluid-h2 mt-2 font-semibold text-ink">Waterverbruik bijhouden is nu lastig</h2>
+      <p class="text-xs font-bold uppercase tracking-[0.16em] text-ink-2">Waarom Peil?</p>
+      <h2 class="fluid-h2 mt-2 font-semibold text-ink">Van bijhouden naar echt sturen op water</h2>
     </div>
     <div class="mt-10 grid gap-4 md:grid-cols-3">
-      {probleem.map((p, i) => (
+      {waarom.map((p, i) => (
         <div class="card reveal p-6" style={`transition-delay:${i * 80}ms`}>
-          <span class="grid h-11 w-11 place-items-center rounded-xl bg-mist text-brand"><Icon name={p.icon} size={22} /></span>
+          <span class="grid h-11 w-11 place-items-center rounded-xl bg-[var(--color-accent-soft)] text-ink"><Icon name={p.icon} size={22} /></span>
           <h3 class="mt-4 font-display text-lg font-bold text-ink">{p.t}</h3>
           <p class="mt-1.5 text-sm leading-relaxed text-muted">{p.d}</p>
         </div>
@@ -124,7 +126,7 @@ const functies = [
   <section id="functies" class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
     <div class="reveal max-w-2xl">
       <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Functies</p>
-      <h2 class="fluid-h2 mt-2 font-semibold text-ink">Alles om water te volgen, op een plek</h2>
+      <h2 class="fluid-h2 mt-2 font-semibold text-ink">Alles om je water te volgen, op één plek</h2>
     </div>
     <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {functies.map((f, i) => (

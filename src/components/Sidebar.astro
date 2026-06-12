@@ -1,8 +1,9 @@
 ---
 import Logo from './Logo.astro';
+import DockwizeMark from './DockwizeMark.astro';
 
 interface Props {
-  active: 'dashboard' | 'invoer' | 'campings' | 'analyse' | 'homewizard';
+  active: 'dashboard' | 'invoer' | 'campings' | 'analyse' | 'homewizard' | 'instellingen';
 }
 const { active } = Astro.props;
 
@@ -12,14 +13,23 @@ const icons: Record<string, string> = {
   tent: 'M3.5 20 12 4l8.5 16M12 4v16M12 20l-4-7M12 20l4-7',
   chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   homewizard: 'M4 9a12 12 0 0 1 16 0M7 12.5a7.5 7.5 0 0 1 10 0M10 16a3 3 0 0 1 4 0',
+  settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7-3a7 7 0 0 0-.1-1.2l2-1.6-2-3.5-2.4.9a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.4a7 7 0 0 0-2 1.2l-2.4-.9-2 3.5 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.5 2.4-.9a7 7 0 0 0 2 1.2L10 21h4l.5-2.4a7 7 0 0 0 2-1.2l2.4.9 2-3.5-2-1.6a7 7 0 0 0 .1-1.2z',
 };
 
-const nav = [
-  { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
-  { key: 'invoer', label: 'Invoer', href: '/invoer', icon: 'invoer' },
-  { key: 'campings', label: 'Campings', href: '/campings', icon: 'tent' },
-  { key: 'analyse', label: 'Analyse', href: '/analyse', icon: 'chart' },
-  { key: 'homewizard', label: 'HomeWizard', href: '/homewizard', icon: 'homewizard', badge: 'soon' },
+const groups = [
+  {
+    items: [
+      { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
+      { key: 'invoer', label: 'Invoer', href: '/invoer', icon: 'invoer' },
+      { key: 'campings', label: 'Campings', href: '/campings', icon: 'tent' },
+      { key: 'analyse', label: 'Analyse', href: '/analyse', icon: 'chart' },
+      { key: 'homewizard', label: 'HomeWizard', href: '/homewizard', icon: 'homewizard', badge: 'soon' },
+    ],
+  },
+  {
+    label: 'Beheer',
+    items: [{ key: 'instellingen', label: 'Instellingen', href: '/instellingen', icon: 'settings' }],
+  },
 ];
 ---
 <aside class="dw-sidebar fixed inset-y-0 left-0 z-40 hidden shrink-0 flex-col overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface)] md:flex">
@@ -34,47 +44,57 @@ const nav = [
   </div>
 
   <nav class="flex-1 overflow-y-auto overflow-x-hidden p-2 no-scrollbar">
-    <ul class="space-y-0.5">
-      {nav.map((item) => {
-        const on = active === item.key;
-        return (
-          <li>
-            <a
-              href={item.href}
-              title={item.label}
-              aria-current={on ? 'page' : undefined}
-              class={`group relative flex items-center gap-2.5 overflow-hidden rounded-[8px] px-2.5 py-2 text-[13px] font-medium transition-all ${
-                on ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-ink-2)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]'
-              }`}
-            >
-              <svg
-                class={`h-4 w-4 shrink-0 ${on ? 'text-white' : 'text-[var(--color-ink-3)]'}`}
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                set:html={`<path d="${icons[item.icon]}"/>`}
-              />
-              <span class="dw-sidebar-fade flex-1 truncate">{item.label}</span>
-              {item.badge === 'soon' && (
-                <span class="dw-sidebar-fade inline-flex items-center rounded-full bg-[var(--color-accent)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--color-ink)]">soon</span>
-              )}
-            </a>
-          </li>
-        );
-      })}
-    </ul>
-
-    <p class="dw-sidebar-fade px-2.5 pb-1.5 pt-4 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--color-muted)]">Regio</p>
-    <div class="dw-sidebar-fade rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
-      <p class="text-[12px] font-semibold text-[var(--color-ink)]">Zeeland · pilot</p>
-      <p class="mt-0.5 text-[11px] text-[var(--color-ink-3)]">6 minicampings aangesloten</p>
-    </div>
+    {groups.map((group, gi) => (
+      <div class={gi > 0 ? 'mt-4' : ''}>
+        {group.label && (
+          <p class="dw-sidebar-fade px-2.5 pb-1.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--color-muted)]">{group.label}</p>
+        )}
+        <ul class="space-y-0.5">
+          {group.items.map((item) => {
+            const on = active === item.key;
+            return (
+              <li>
+                <a
+                  href={item.href}
+                  title={item.label}
+                  aria-current={on ? 'page' : undefined}
+                  class={`group relative flex items-center gap-2.5 overflow-hidden rounded-[8px] px-2.5 py-2 text-[13px] font-medium transition-all ${
+                    on ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-ink-2)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]'
+                  }`}
+                >
+                  <svg
+                    class={`h-4 w-4 shrink-0 ${on ? 'text-white' : 'text-[var(--color-ink-3)]'}`}
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    set:html={`<path d="${icons[item.icon]}"/>`}
+                  />
+                  <span class="dw-sidebar-fade flex-1 truncate">{item.label}</span>
+                  {item.badge === 'soon' && (
+                    <span class="dw-sidebar-fade inline-flex items-center rounded-full bg-[var(--color-accent)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--color-ink)]">soon</span>
+                  )}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))}
   </nav>
 
-  <div class="border-t border-[var(--color-border)] p-2">
+  <!-- Co-brand: onderdeel van WaterWijs (Dockwize) -->
+  <div class="border-t border-[var(--color-border)] px-2 py-2">
+    <div class="flex items-center gap-2.5 rounded-[8px] px-2.5 py-2">
+      <span class="flex h-4 w-4 shrink-0 items-center justify-center"><DockwizeMark size={17} /></span>
+      <span class="dw-sidebar-fade leading-tight">
+        <span class="block text-[9.5px] font-medium uppercase tracking-[0.1em] text-[var(--color-muted)]">Onderdeel van</span>
+        <span class="block text-[12.5px] font-semibold text-[var(--color-ink)]">WaterWijs</span>
+        <span class="block text-[10px] text-[var(--color-ink-3)]">een programma van Dockwize</span>
+      </span>
+    </div>
     <button
       data-reset
       type="button"
       title="Demo resetten"
-      class="flex w-full items-center gap-2.5 overflow-hidden rounded-[8px] px-2.5 py-1.5 text-[12px] font-medium text-[var(--color-ink-3)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
+      class="mt-1 flex w-full items-center gap-2.5 overflow-hidden rounded-[8px] px-2.5 py-1.5 text-[12px] font-medium text-[var(--color-ink-3)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
     >
       <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5" />
