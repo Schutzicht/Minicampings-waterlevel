@@ -21,8 +21,9 @@ import AppLayout from '../layouts/AppLayout.astro';
     const ids = new Set(scopedCampings().map((c) => c.id));
     const note = document.getElementById('scopeNote')!;
     if (!scope.isRegio) {
+      const own = scopedCampings()[0];
       note.classList.remove('hidden'); note.classList.add('flex');
-      note.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Je bent ingelogd als eigenaar en ziet alleen je eigen camping.`;
+      note.innerHTML = `<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="min-w-0">Je ziet alleen je eigen camping.</span><a href="/instellingen?c=${own.slug}" class="ml-auto inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-ink hover:underline">Eigenschappen bewerken<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>`;
     } else {
       note.classList.add('hidden'); note.classList.remove('flex');
     }

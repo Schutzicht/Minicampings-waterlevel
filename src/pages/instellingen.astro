@@ -129,7 +129,10 @@ const dagen = [
   const toast = (m: string) => (window as any).peilToast?.(m);
 
   const scope = roleScope();
-  let currentId = scope.isRegio ? getCampings()[0].id : scope.campingId!;
+  const paramC = new URLSearchParams(location.search).get('c');
+  const byParam = paramC ? getCamping(paramC) : undefined;
+  // eigenaar: altijd eigen camping. beheerder: eventueel via ?c=, anders de eerste.
+  let currentId = scope.isRegio ? byParam?.id ?? getCampings()[0].id : scope.campingId!;
 
   // regio-beheerder mag elke camping kiezen
   if (scope.isRegio) {

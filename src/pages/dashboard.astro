@@ -236,8 +236,8 @@ const kpis = [
         <div><p class="text-xs text-faint">Regio gemiddelde</p><p class="tnum font-display text-2xl font-semibold text-ink">${fmtInt(regioAvg)}<span class="text-sm text-faint"> L</span></p></div>
         <div><p class="text-xs text-faint">Jouw plek</p><p class="tnum font-display text-2xl font-semibold text-ink">${rank}<span class="text-sm text-faint"> / ${rows.length}</span></p></div>
       </div>
-      <div class="mt-4 rounded-[10px] px-3 py-2.5 text-sm font-medium ${diff <= 0 ? 'bg-good-soft text-good' : 'bg-warn-soft text-warn'}">
-        ${diff <= 0 ? `Je zit ${Math.abs(diff)}% onder het regio-gemiddelde. Mooi, zuinig bezig.` : `Je zit ${diff}% boven het regio-gemiddelde. Hier valt mogelijk te besparen.`}
+      <div class="mt-4 rounded-[10px] bg-surface-2 px-3 py-2.5 text-sm font-medium text-ink-2">
+        ${diff <= 0 ? `${Math.abs(diff)}% onder het regio-gemiddelde` : `${diff}% boven het regio-gemiddelde`}
       </div>
     </div>`;
   }

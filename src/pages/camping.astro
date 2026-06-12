@@ -58,7 +58,10 @@ import AppLayout from '../layouts/AppLayout.astro';
               <h1 class="font-display text-2xl font-semibold drop-shadow sm:text-3xl">${c.naam}</h1>
               <p class="text-sm text-white/85">${c.plaats} · ${c.pitches} kampeerplekken</p>
             </div>
-            <a href="/invoer?camping=${c.slug}" class="btn btn-primary hidden px-4 py-2 text-sm sm:inline-flex">Waterstand invoeren</a>
+            <div class="hidden gap-2 sm:flex">
+              <a href="/instellingen?c=${c.slug}" class="btn bg-white/15 px-4 py-2 text-sm text-white backdrop-blur hover:bg-white/25">Eigenschappen</a>
+              <a href="/invoer?camping=${c.slug}" class="btn btn-primary px-4 py-2 text-sm">Waterstand invoeren</a>
+            </div>
           </div>
         </div>
       </div>
@@ -68,7 +71,10 @@ import AppLayout from '../layouts/AppLayout.astro';
         <span class="chip ${c.winterkamperen ? 'bg-good-soft text-good' : 'bg-line-soft text-faint'}">${c.winterkamperen ? 'Winterkamperen' : 'Geen winterkamperen'}</span>
       </div>
 
-      <a href="/invoer?camping=${c.slug}" class="btn btn-primary mt-3 w-full py-2.5 sm:hidden">Waterstand invoeren</a>
+      <div class="mt-3 grid grid-cols-2 gap-2 sm:hidden">
+        <a href="/instellingen?c=${c.slug}" class="btn btn-ghost py-2.5 text-sm">Eigenschappen</a>
+        <a href="/invoer?camping=${c.slug}" class="btn btn-primary py-2.5 text-sm">Waterstand invoeren</a>
+      </div>
 
       <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         ${kpi('Verbruik laatste week', latest ? fmt1(verbruikOf(latest)) : '–', 'm³', 'text-ink', latest ? `week ${latest.week}` : '')}
