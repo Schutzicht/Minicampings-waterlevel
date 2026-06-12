@@ -1,0 +1,212 @@
+---
+// Rondleiding door de tool. Zwevende startknop op elke app-pagina; spotlight +
+// onderschrift-kaart die over paginanavigatie heen doorloopt (sessionStorage).
+---
+<button
+  id="tour-launch"
+  class="fixed bottom-20 right-4 z-[90] inline-flex items-center gap-2 rounded-full bg-[var(--color-ink)] px-4 py-2.5 text-[13px] font-semibold text-white shadow-lift transition-colors hover:bg-black md:bottom-6 md:right-6"
+>
+  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 9-14 9V3Z" /></svg>
+  Rondleiding
+</button>
+
+<div id="tour-root" hidden class="fixed inset-0 z-[100]">
+  <div id="tour-block" class="absolute inset-0"></div>
+  <div
+    id="tour-spot"
+    hidden
+    class="pointer-events-none fixed rounded-xl ring-[3px] ring-[var(--color-accent)]"
+    style="box-shadow: 0 0 0 9999px rgba(29,29,27,0.66); transition: left .35s cubic-bezier(.22,1,.36,1), top .35s cubic-bezier(.22,1,.36,1), width .35s cubic-bezier(.22,1,.36,1), height .35s cubic-bezier(.22,1,.36,1);"
+  >
+  </div>
+
+  <div id="tour-card" class="fixed left-1/2 top-1/2 w-[360px] max-w-[calc(100vw-24px)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--color-border)] bg-white p-5 shadow-lift">
+    <div class="flex items-center justify-between gap-3">
+      <span id="tour-group" class="rounded-full bg-[var(--color-accent-soft)] px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-[var(--color-ink)]"></span>
+      <button id="tour-close" class="-mr-1 rounded-lg p-1 text-[var(--color-ink-3)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]" aria-label="Rondleiding sluiten">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <h3 id="tour-title" class="mt-3 font-display text-lg font-bold tracking-tight text-[var(--color-ink)]"></h3>
+    <p id="tour-body" class="mt-1.5 text-sm leading-relaxed text-[var(--color-ink-2)]"></p>
+
+    <div class="mt-5 flex items-center justify-between gap-3">
+      <button id="tour-menu-btn" class="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-ink-3)] hover:text-[var(--color-ink)]">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        Inhoud
+      </button>
+      <div class="flex items-center gap-2">
+        <span id="tour-progress" class="tnum mr-1 text-xs font-semibold text-[var(--color-faint)]"></span>
+        <button id="tour-prev" class="rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--color-ink-2)] hover:border-[var(--color-border-strong)] disabled:opacity-40">Vorige</button>
+        <button id="tour-next" class="rounded-lg bg-[var(--color-ink)] px-3 py-1.5 text-sm font-semibold text-white hover:bg-black">Volgende</button>
+      </div>
+    </div>
+
+    <div id="tour-menu" hidden class="no-scrollbar mt-4 max-h-64 overflow-y-auto rounded-xl border border-[var(--color-line-soft)] bg-[var(--color-surface-2)] p-2"></div>
+  </div>
+</div>
+
+<script>
+  import { TOUR, TOUR_GROUPS } from '../data/tour';
+
+  const SKEY = 'peil-tour';
+  const $ = (id: string) => document.getElementById(id)!;
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const normPath = (p: string) => p.replace(/\/+$/, '') || '/';
+
+  function getState(): { active: boolean; index: number } | null {
+    try { return JSON.parse(sessionStorage.getItem(SKEY) || 'null'); } catch { return null; }
+  }
+  function setState(s: { active: boolean; index: number }) { sessionStorage.setItem(SKEY, JSON.stringify(s)); }
+  function clearState() { sessionStorage.removeItem(SKEY); }
+
+  function waitFor(selector: string, timeout = 2500): Promise<Element | null> {
+    return new Promise((resolve) => {
+      const t0 = Date.now();
+      (function poll() {
+        const el = document.querySelector(selector);
+        if (el) return resolve(el);
+        if (Date.now() - t0 > timeout) return resolve(null);
+        requestAnimationFrame(poll);
+      })();
+    });
+  }
+
+  let currentTarget: Element | null = null;
+
+  function positionSpot(el: Element) {
+    const r = el.getBoundingClientRect();
+    const pad = 8;
+    const spot = $('tour-spot');
+    spot.hidden = false;
+    spot.style.left = Math.max(4, r.left - pad) + 'px';
+    spot.style.top = Math.max(4, r.top - pad) + 'px';
+    spot.style.width = Math.min(window.innerWidth - 8, r.width + pad * 2) + 'px';
+    spot.style.height = r.height + pad * 2 + 'px';
+  }
+
+  function placeCard(el: Element | null) {
+    const card = $('tour-card');
+    if (!el) {
+      card.style.left = '50%';
+      card.style.top = '50%';
+      card.style.translate = '-50% -50%';
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    const cw = card.offsetWidth;
+    const ch = card.offsetHeight;
+    card.style.translate = '0 0';
+    const left = Math.min(Math.max(12, r.left), window.innerWidth - cw - 12);
+    let top = r.bottom + 14;
+    if (top + ch > window.innerHeight - 12) top = r.top - ch - 14;
+    if (top < 12) top = Math.max(12, (window.innerHeight - ch) / 2);
+    card.style.left = left + 'px';
+    card.style.top = top + 'px';
+  }
+
+  function renderMenu(activeIndex: number) {
+    const menu = $('tour-menu');
+    let html = '';
+    for (const g of TOUR_GROUPS) {
+      const stops = TOUR.map((s, i) => ({ s, i })).filter((x) => x.s.group === g);
+      if (!stops.length) continue;
+      html += `<div class="px-2 pb-1 pt-2 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--color-faint)]">${g}</div>`;
+      for (const { s, i } of stops) {
+        html += `<button data-jump="${i}" class="block w-full rounded-lg px-2 py-1.5 text-left text-sm ${
+          i === activeIndex ? 'bg-[var(--color-ink)] font-semibold text-white' : 'text-[var(--color-ink-2)] hover:bg-white'
+        }">${s.title}</button>`;
+      }
+    }
+    menu.innerHTML = html;
+  }
+
+  async function showStop(index: number) {
+    const stop = TOUR[index];
+    if (!stop) return exit();
+
+    $('tour-group').textContent = stop.group;
+    $('tour-title').textContent = stop.title;
+    $('tour-body').textContent = stop.body;
+    $('tour-progress').textContent = `${index + 1} / ${TOUR.length}`;
+    ($('tour-prev') as HTMLButtonElement).disabled = index === 0;
+    $('tour-next').textContent = index === TOUR.length - 1 ? 'Afsluiten' : 'Volgende';
+    renderMenu(index);
+    $('tour-menu').hidden = true;
+
+    let target: Element | null = null;
+    if (stop.selector && !stop.center) target = await waitFor(stop.selector);
+    currentTarget = target;
+
+    if (target) {
+      (target as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await sleep(260);
+      positionSpot(target);
+    } else {
+      $('tour-spot').hidden = true;
+    }
+    placeCard(target);
+  }
+
+  async function route() {
+    const s = getState();
+    const launch = $('tour-launch');
+    const root = $('tour-root');
+    if (!s || !s.active) {
+      root.hidden = true;
+      launch.hidden = false;
+      return;
+    }
+    const stop = TOUR[s.index];
+    if (!stop) return exit();
+
+    if (normPath(location.pathname) !== normPath(stop.route)) {
+      location.assign(stop.route);
+      return;
+    }
+    launch.hidden = true;
+    root.hidden = false;
+    await showStop(s.index);
+  }
+
+  function go(index: number) {
+    setState({ active: true, index });
+    route();
+  }
+  function start() { go(0); }
+  function exit() {
+    clearState();
+    $('tour-root').hidden = true;
+    $('tour-spot').hidden = true;
+    $('tour-launch').hidden = false;
+  }
+
+  $('tour-launch').addEventListener('click', start);
+  $('tour-close').addEventListener('click', exit);
+  $('tour-prev').addEventListener('click', () => { const s = getState(); if (s) go(Math.max(0, s.index - 1)); });
+  $('tour-next').addEventListener('click', () => {
+    const s = getState();
+    if (!s) return;
+    if (s.index >= TOUR.length - 1) exit();
+    else go(s.index + 1);
+  });
+  $('tour-menu-btn').addEventListener('click', () => { const m = $('tour-menu'); m.hidden = !m.hidden; });
+  $('tour-menu').addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest('[data-jump]') as HTMLElement | null;
+    if (t) go(parseInt(t.dataset.jump!));
+  });
+  $('tour-block').addEventListener('click', () => { const m = $('tour-menu'); if (!m.hidden) m.hidden = true; });
+
+  let rT: number | undefined;
+  window.addEventListener('resize', () => {
+    window.clearTimeout(rT);
+    rT = window.setTimeout(() => {
+      const s = getState();
+      if (!s || !s.active || $('tour-root').hidden) return;
+      if (currentTarget) positionSpot(currentTarget);
+      placeCard(currentTarget);
+    }, 120);
+  });
+
+  route();
+</script>

@@ -37,7 +37,7 @@ const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcam
 
     <slot name="action" />
 
-    <label class="relative flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 pl-1 pr-6 transition-colors hover:border-[var(--color-border-strong)]">
+    <label id="roleChip" class="relative flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 pl-1 pr-6 transition-colors hover:border-[var(--color-border-strong)]">
       <span id="roleAvatar" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--color-ink)] text-[11px] font-semibold text-white">RZ</span>
       <span class="hidden flex-col leading-none sm:flex">
         <span id="roleName" class="text-[12px] font-medium text-[var(--color-ink)]">Regio Zeeland</span>

@@ -44,7 +44,7 @@ export interface AppState {
 }
 
 const STORAGE_KEY = 'peil:v1';
-const VERSION = 2;
+const VERSION = 3;
 const HISTORY_WEEKS = 10; // aantal weken seed-historie incl. huidige week
 const ROLE_KEY = 'peil:role';
 const REMINDER_KEY = 'peil:reminders';
@@ -66,12 +66,12 @@ const tp = (staplaats: number, camperplaats: number, chalet = 0): PlaatsType[] =
 };
 
 const CAMPING_SEED: CampingSeed[] = [
-  { id: 'zonnehoek', slug: 'zonnehoek', naam: 'Minicamping De Zonnehoek', plaats: 'Renesse', pitches: 25, types: tp(18, 4, 3), winterkamperen: false, cover: '/images/camping-zonnehoek.png', meterStart: 2840, eff: 300, submittedCurrent: true },
-  { id: 'weiland', slug: 'weiland', naam: "Minicamping 't Weiland", plaats: 'Burgh-Haamstede', pitches: 20, types: tp(16, 4), winterkamperen: false, cover: '/images/camping-weiland.png', meterStart: 1960, eff: 380, submittedCurrent: true },
-  { id: 'boomgaard', slug: 'boomgaard', naam: 'Minicamping De Boomgaard', plaats: 'Zoutelande', pitches: 24, types: tp(17, 4, 3), winterkamperen: true, cover: '/images/camping-boomgaard.png', meterStart: 3320, eff: 455, submittedCurrent: false },
-  { id: 'achterdedijk', slug: 'achterdedijk', naam: 'Boerderijcamping Achter de Dijk', plaats: 'Kamperland', pitches: 15, types: tp(11, 4), winterkamperen: false, cover: '/images/camping-achterdedijk.png', meterStart: 1170, eff: 335, submittedCurrent: true },
-  { id: 'duinzicht', slug: 'duinzicht', naam: 'Minicamping Duinzicht', plaats: 'Oostkapelle', pitches: 25, types: tp(16, 5, 4), winterkamperen: true, cover: '/images/camping-duinzicht.png', meterStart: 3015, eff: 415, submittedCurrent: false },
-  { id: 'rietkraag', slug: 'rietkraag', naam: 'Minicamping De Rietkraag', plaats: 'Sint-Annaland', pitches: 18, types: tp(14, 4), winterkamperen: false, cover: '/images/camping-rietkraag.png', meterStart: 1545, eff: 360, submittedCurrent: false },
+  { id: 'zonnehoek', slug: 'zonnehoek', naam: 'Minicamping Zonnehoek', plaats: 'Biggekerke', pitches: 25, types: tp(18, 4, 3), winterkamperen: false, cover: '/images/camping-zonnehoek.png', meterStart: 2840, eff: 300, submittedCurrent: true },
+  { id: 'anthonijshoek', slug: 'anthonijshoek', naam: 'Minicamping Sint Anthonijshoek', plaats: 'Koudekerke', pitches: 20, types: tp(16, 4), winterkamperen: false, cover: '/images/camping-weiland.png', meterStart: 1960, eff: 380, submittedCurrent: true },
+  { id: 'laferme', slug: 'laferme', naam: 'Minicamping La Ferme', plaats: 'Brouwershaven', pitches: 24, types: tp(17, 4, 3), winterkamperen: true, cover: '/images/camping-boomgaard.png', meterStart: 3320, eff: 450, submittedCurrent: false },
+  { id: 'rustenpolder', slug: 'rustenpolder', naam: 'Minicamping Rustenpolder', plaats: 'Vrouwenpolder', pitches: 15, types: tp(11, 4), winterkamperen: false, cover: '/images/camping-achterdedijk.png', meterStart: 1170, eff: 335, submittedCurrent: true },
+  { id: 'pitteperk', slug: 'pitteperk', naam: 'Minicamping Pitteperk', plaats: 'Middelburg', pitches: 25, types: tp(16, 5, 4), winterkamperen: true, cover: '/images/camping-duinzicht.png', meterStart: 3015, eff: 415, submittedCurrent: false },
+  { id: 'kwedammertje', slug: 'kwedammertje', naam: "Minicamping 't Kwedammertje", plaats: 'Kwadendamme', pitches: 18, types: tp(14, 4), winterkamperen: false, cover: '/images/camping-rietkraag.png', meterStart: 1545, eff: 360, submittedCurrent: false },
 ];
 
 // -----------------------------------------------------------------------------

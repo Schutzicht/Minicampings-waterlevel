@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Sidebar from '../components/Sidebar.astro';
 import Topbar from '../components/Topbar.astro';
 import Icon from '../components/Icon.astro';
+import DemoTour from '../components/DemoTour.astro';
 
 interface Props {
   title: string;
@@ -68,6 +69,8 @@ const mobileNav = [
     </nav>
 
     <div id="toast" class="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 md:bottom-8"></div>
+
+    <DemoTour />
 
     <script>
       import { currentWeekStatus, resetDemo, getRole, setRole, getCamping, roleScope, currentWeek, readingForWeek } from '../lib/store';
