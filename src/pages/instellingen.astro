@@ -130,15 +130,23 @@ const dagen = [
 
   ensureLoaded().then(() => {
   const scope = roleScope();
+  const campings = getCampings();
   const paramC = new URLSearchParams(location.search).get('c');
   const byParam = paramC ? getCamping(paramC) : undefined;
   // eigenaar: altijd eigen camping. beheerder: eventueel via ?c=, anders de eerste.
-  let currentId = scope.isRegio ? byParam?.id ?? getCampings()[0].id : scope.campingId!;
+  let currentId = (scope.isRegio ? byParam?.id ?? campings[0]?.id : scope.campingId) ?? '';
+
+  // nog geen camping om te bewerken -> naar aanmelden
+  if (!currentId || !getCamping(currentId)) {
+    location.assign('/aanmelden');
+    return;
+  }
 
   // regio-beheerder mag elke camping kiezen
   if (scope.isRegio) {
     $('regioPicker').classList.remove('hidden');
     const sel = $<HTMLSelectElement>('ip-camping');
+    sel.innerHTML = campings.map((c) => `<option value="${c.id}">${c.naam}${c.plaats ? ' · ' + c.plaats : ''}</option>`).join('');
     sel.value = currentId;
     sel.addEventListener('change', () => { currentId = sel.value; loadProfile(); loadReminders(); });
   }

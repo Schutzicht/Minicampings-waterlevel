@@ -85,9 +85,9 @@ const steps = [
   function getConnected(): Set<string> {
     try {
       const raw = localStorage.getItem(HW_KEY);
-      return new Set(raw ? JSON.parse(raw) : ['pitteperk']);
+      return new Set(raw ? JSON.parse(raw) : []);
     } catch {
-      return new Set(['pitteperk']);
+      return new Set([]);
     }
   }
   function setConnected(s: Set<string>) {

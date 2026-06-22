@@ -47,34 +47,8 @@ export interface AppState {
   readings: Reading[];
 }
 
-const VERSION = 4;
-const HISTORY_WEEKS = 10; // aantal weken seed-historie incl. huidige week
+const VERSION = 5;
 const ROLE_KEY = 'peil:role';
-
-// -----------------------------------------------------------------------------
-// Camping-metadata (seed)
-// -----------------------------------------------------------------------------
-
-interface CampingSeed extends Camping {
-  eff: number; // basis liter per bezoeker per week
-  submittedCurrent: boolean; // heeft deze camping de huidige week al ingevuld?
-}
-
-const tp = (staplaats: number, camperplaats: number, chalet = 0): PlaatsType[] => {
-  const out: PlaatsType[] = [{ id: 'staplaats', label: 'Toeristische staplaats', aantal: staplaats }];
-  if (camperplaats) out.push({ id: 'camperplaats', label: 'Camperplaats', aantal: camperplaats });
-  if (chalet) out.push({ id: 'chalet', label: 'Chalet / huuraccommodatie', aantal: chalet });
-  return out;
-};
-
-const CAMPING_SEED: CampingSeed[] = [
-  { id: 'zonnehoek', slug: 'zonnehoek', naam: 'Minicamping Zonnehoek', plaats: 'Biggekerke', pitches: 25, types: tp(18, 4, 3), winterkamperen: false, cover: '/images/camping-zonnehoek.png', meterStart: 2840, eff: 300, submittedCurrent: true },
-  { id: 'anthonijshoek', slug: 'anthonijshoek', naam: 'Minicamping Sint Anthonijshoek', plaats: 'Koudekerke', pitches: 20, types: tp(16, 4), winterkamperen: false, cover: '/images/camping-weiland.png', meterStart: 1960, eff: 380, submittedCurrent: true },
-  { id: 'laferme', slug: 'laferme', naam: 'Minicamping La Ferme', plaats: 'Brouwershaven', pitches: 24, types: tp(17, 4, 3), winterkamperen: true, cover: '/images/camping-boomgaard.png', meterStart: 3320, eff: 450, submittedCurrent: false },
-  { id: 'rustenpolder', slug: 'rustenpolder', naam: 'Minicamping Rustenpolder', plaats: 'Vrouwenpolder', pitches: 15, types: tp(11, 4), winterkamperen: false, cover: '/images/camping-achterdedijk.png', meterStart: 1170, eff: 335, submittedCurrent: true },
-  { id: 'pitteperk', slug: 'pitteperk', naam: 'Minicamping Pitteperk', plaats: 'Middelburg', pitches: 25, types: tp(16, 5, 4), winterkamperen: true, cover: '/images/camping-duinzicht.png', meterStart: 3015, eff: 415, submittedCurrent: false },
-  { id: 'kwedammertje', slug: 'kwedammertje', naam: "Minicamping 't Kwedammertje", plaats: 'Kwadendamme', pitches: 18, types: tp(14, 4), winterkamperen: false, cover: '/images/camping-rietkraag.png', meterStart: 1545, eff: 360, submittedCurrent: false },
-];
 
 // -----------------------------------------------------------------------------
 // ISO-week helpers
@@ -117,30 +91,6 @@ export function currentWeek(): { year: number; week: number } {
   return isoWeek(new Date());
 }
 
-// -----------------------------------------------------------------------------
-// Deterministische RNG (stabiele seed-cijfers)
-// -----------------------------------------------------------------------------
-
-function hashStr(str: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function mulberry32(seed: number): () => number {
-  let a = seed;
-  return function () {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const round1 = (v: number) => Math.round(v * 10) / 10;
 
@@ -157,69 +107,6 @@ export function distributeOccupancy(types: PlaatsType[], total: number): Record<
     assigned += n;
   });
   return res;
-}
-
-// -----------------------------------------------------------------------------
-// Seed
-// -----------------------------------------------------------------------------
-
-function generateSeed(now = new Date()): AppState {
-  const { year, week } = isoWeek(now);
-  const readings: Reading[] = [];
-  const holidayWeeks = [18, 19, 20, 22]; // mei-/Hemelvaart-/Pinkstervakantie
-
-  for (const c of CAMPING_SEED) {
-    const rng = mulberry32(hashStr(c.id));
-    let meter = c.meterStart;
-
-    for (let i = HISTORY_WEEKS - 1; i >= 0; i--) {
-      const w = week - i;
-      if (w < 1) continue;
-      const t = (HISTORY_WEEKS - 1 - i) / (HISTORY_WEEKS - 1); // 0 oud .. 1 nieuw
-      let occ = 0.2 + t * 0.52;
-      if (holidayWeeks.includes(w)) occ += 0.12;
-      occ = clamp(occ + (rng() - 0.5) * 0.1, 0.12, 0.99);
-
-      const bezetting = Math.max(1, Math.round(c.pitches * occ));
-      const partySize = 2.4 + rng() * 0.5;
-      const turnover = 1.05 + rng() * 0.25;
-      const bezoekers = Math.round(bezetting * partySize * turnover);
-      const literPerVisitor = c.eff * (0.92 + rng() * 0.16);
-      const verbruikM3 = (bezoekers * literPerVisitor) / 1000;
-      meter = round1(meter + verbruikM3);
-
-      // sommige campings hebben de huidige week nog niet ingevuld
-      if (i === 0 && !c.submittedCurrent) continue;
-
-      const bezettingPerType = distributeOccupancy(c.types, bezetting);
-      const bezettingTotal = Object.values(bezettingPerType).reduce((s, n) => s + n, 0) || bezetting;
-
-      const mon = mondayOfISOWeek(year, w);
-      readings.push({
-        id: `${c.id}-${year}-${w}`,
-        campingId: c.id,
-        jaar: year,
-        week: w,
-        meterstand: meter,
-        bezoekers,
-        bezetting: bezettingTotal,
-        bezettingPerType,
-        bron: 'handmatig',
-        datum: mon.toISOString().slice(0, 10),
-      });
-    }
-  }
-
-  return {
-    version: VERSION,
-    seededWeek: week,
-    campings: CAMPING_SEED.map(({ eff, submittedCurrent, ...rest }) => {
-      void eff;
-      void submittedCurrent;
-      return rest;
-    }),
-    readings,
-  };
 }
 
 // -----------------------------------------------------------------------------
@@ -247,9 +134,11 @@ function fromReadingRow(r: any): Reading {
   return { id: r.id, campingId: r.camping_id, jaar: r.jaar, week: r.week, meterstand: num(r.meterstand), bezoekers: r.bezoekers, bezetting: r.bezetting, bezettingPerType: r.bezetting_per_type ?? {}, bron: r.bron, datum: r.datum };
 }
 
-/** Synchroon: geeft de huidige cache (of een lokale seed op de server / vóór hydrate). */
+const emptyState = (): AppState => ({ version: VERSION, seededWeek: 0, campings: [], readings: [] });
+
+/** Synchroon: geeft de huidige cache (of een lege staat op de server / vóór hydrate). */
 export function load(): AppState {
-  if (!cache) cache = generateSeed();
+  if (!cache) cache = emptyState();
   return cache;
 }
 
@@ -257,37 +146,30 @@ function emitChange() {
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('peil:change'));
 }
 
-/** Vult de cache uit Supabase. Seedt de database als die nog leeg is. Idempotent. */
+/** Vult de cache uit Supabase. Idempotent. Seedt niets: leeg blijft leeg. */
 export function ensureLoaded(): Promise<void> {
   if (typeof window === 'undefined' || hydrated) return Promise.resolve();
   if (hydrating) return hydrating;
   hydrating = (async () => {
     try {
-      const { data: camps, error } = await sb.from('campings').select('*').order('sort');
+      const [{ data: camps, error }, { data: reads }, { data: setts }] = await Promise.all([
+        sb.from('campings').select('*').order('sort'),
+        sb.from('readings').select('*'),
+        sb.from('settings').select('*'),
+      ]);
       if (error) throw error;
-      if (!camps || camps.length === 0) {
-        const seed = generateSeed();
-        await sb.from('campings').upsert(seed.campings.map((c, i) => toCampingRow(c, i)), { onConflict: 'id' });
-        await sb.from('readings').upsert(seed.readings.map(toReadingRow), { onConflict: 'id' });
-        cache = seed;
-      } else {
-        const [{ data: reads }, { data: setts }] = await Promise.all([
-          sb.from('readings').select('*'),
-          sb.from('settings').select('*'),
-        ]);
-        cache = {
-          version: VERSION,
-          seededWeek: 0,
-          campings: camps.map(fromCampingRow),
-          readings: (reads ?? []).map(fromReadingRow),
-        };
-        settingsCache = {};
-        for (const s of setts ?? []) settingsCache[s.camping_id] = { email: !!s.email, adres: s.adres ?? '', dag: s.dag ?? 'ma', push: !!s.push };
-      }
+      cache = {
+        version: VERSION,
+        seededWeek: 0,
+        campings: (camps ?? []).map(fromCampingRow),
+        readings: (reads ?? []).map(fromReadingRow),
+      };
+      settingsCache = {};
+      for (const s of setts ?? []) settingsCache[s.camping_id] = { email: !!s.email, adres: s.adres ?? '', dag: s.dag ?? 'ma', push: !!s.push };
       hydrated = true;
     } catch (e) {
-      console.error('Peil: laden uit Supabase mislukt, lokale seed gebruikt.', e);
-      if (!cache) cache = generateSeed();
+      console.error('Peil: laden uit Supabase mislukt.', e);
+      if (!cache) cache = emptyState();
       hydrated = true;
     }
     emitChange();
@@ -311,21 +193,48 @@ async function pushCamping(c: Camping) {
   }
 }
 
-/** Zet de demo terug: leegt de database en seedt opnieuw. */
-export async function resetDemo(): Promise<void> {
-  const seed = generateSeed();
-  try {
-    await sb.from('readings').delete().neq('id', '');
-    await sb.from('campings').delete().neq('id', '');
-    await sb.from('campings').insert(seed.campings.map((c, i) => toCampingRow(c, i)));
-    await sb.from('readings').insert(seed.readings.map(toReadingRow));
-  } catch (e) {
-    console.error('Peil: reset mislukt.', e);
-  }
-  cache = seed;
-  settingsCache = {};
-  hydrated = true;
+function slugify(s: string): string {
+  return (
+    s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'camping'
+  );
+}
+
+export interface NewCampingInput {
+  naam: string;
+  plaats: string;
+  types: PlaatsType[];
+  winterkamperen: boolean;
+  meterStart: number;
+}
+
+/** Maakt een nieuwe camping aan (onboarding). Geeft de aangemaakte camping terug. */
+export async function createCamping(input: NewCampingInput): Promise<Camping> {
+  const state = load();
+  const base = slugify(input.naam);
+  let slug = base;
+  let n = 1;
+  while (state.campings.some((c) => c.slug === slug)) slug = `${base}-${++n}`;
+  const camping: Camping = {
+    id: slug,
+    slug,
+    naam: input.naam.trim(),
+    plaats: input.plaats.trim(),
+    pitches: input.types.reduce((s, t) => s + (t.aantal || 0), 0),
+    types: input.types,
+    winterkamperen: input.winterkamperen,
+    cover: '',
+    meterStart: input.meterStart || 0,
+  };
+  state.campings.push(camping);
   emitChange();
+  await pushCamping(camping);
+  return camping;
 }
 
 // -----------------------------------------------------------------------------

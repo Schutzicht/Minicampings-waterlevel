@@ -127,6 +127,16 @@ import Icon from '../components/Icon.astro';
   ensureLoaded().then(() => {
   // camping-opties
   const campings = getCampings();
+
+  // geen camping beschikbaar -> verwijs naar aanmelden
+  const initScope = roleScope();
+  const available = initScope.isRegio ? campings : campings.filter((c) => c.id === initScope.campingId);
+  if (!available.length) {
+    document.getElementById('invoerForm')!.innerHTML =
+      `<div class="grid place-items-center gap-3 py-6 text-center"><p class="font-display text-lg font-bold text-ink">Nog geen camping</p><p class="max-w-xs text-sm text-muted">Meld eerst je camping aan. Daarna kun je hier elke week de waterstand invoeren.</p><a href="/aanmelden" class="btn btn-primary mt-1 px-4 py-2 text-sm">Camping aanmelden</a></div>`;
+    return;
+  }
+
   campingSel.innerHTML = campings.map((c) => `<option value="${c.slug}">${c.naam} · ${c.plaats}</option>`).join('');
 
   // week-opties: huidige week + 7 ervoor

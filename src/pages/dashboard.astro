@@ -170,7 +170,18 @@ const kpis = [
     }
 
     const list = document.getElementById('campingList')!;
-    list.innerHTML = campingSummaries().map((s) => cardRow(s)).join('');
+    const summaries = campingSummaries();
+    list.innerHTML = summaries.length
+      ? summaries.map((s) => cardRow(s)).join('')
+      : emptyState('Nog geen campings aangesloten', 'Meld de eerste minicamping aan om te beginnen met meten.');
+  }
+
+  function emptyState(title: string, body: string) {
+    return `<div class="card grid place-items-center gap-2 p-10 text-center">
+      <p class="font-display text-lg font-bold text-ink">${title}</p>
+      <p class="max-w-sm text-sm text-muted">${body}</p>
+      <a href="/aanmelden" class="btn btn-primary mt-2 px-4 py-2 text-sm">Camping aanmelden</a>
+    </div>`;
   }
 
   function cardRow(s: ReturnType<typeof campingSummaries>[number]) {
@@ -224,12 +235,17 @@ const kpis = [
     // jouw positie in de regio
     set('perTitle', 'Jouw positie in de regio');
     const link = document.getElementById('perLink'); if (link) link.innerHTML = `Naar analyse <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+    const list = document.getElementById('campingList')!;
+    if (!weekly.length) {
+      list.innerHTML = `<div class="card grid place-items-center gap-2 p-10 text-center"><p class="font-display text-lg font-bold text-ink">Nog geen registraties</p><p class="max-w-sm text-sm text-muted">Vul je eerste week in, dan zie je hier hoe je je verhoudt tot de regio.</p><a href="/invoer?camping=${c.slug}" class="btn btn-primary mt-2 px-4 py-2 text-sm">Vul week ${week} in</a></div>`;
+      return;
+    }
     const rows = benchmark();
     const rank = rows.findIndex((r) => r.camping.id === c.id) + 1;
     const mine = rows[rank - 1];
-    const regioAvg = rows.reduce((s, r) => s + r.literPerBezoeker * r.bezoekersTotaal, 0) / Math.max(1, rows.reduce((s, r) => s + r.bezoekersTotaal, 0));
-    const diff = mine ? Math.round(((mine.literPerBezoeker - regioAvg) / regioAvg) * 100) : 0;
-    const list = document.getElementById('campingList')!;
+    const denom = rows.reduce((s, r) => s + r.bezoekersTotaal, 0);
+    const regioAvg = denom ? rows.reduce((s, r) => s + r.literPerBezoeker * r.bezoekersTotaal, 0) / denom : 0;
+    const diff = mine && regioAvg ? Math.round(((mine.literPerBezoeker - regioAvg) / regioAvg) * 100) : 0;
     list.innerHTML = `<div class="card p-5">
       <div class="grid gap-4 sm:grid-cols-3">
         <div><p class="text-xs text-faint">Jouw liter per gast</p><p class="tnum font-display text-2xl font-semibold" style="color:${effColor(mine ? mine.literPerBezoeker : 0)}">${mine ? fmtInt(mine.literPerBezoeker) : '–'}<span class="text-sm text-faint"> L</span></p></div>

@@ -1,0 +1,129 @@
+---
+import '../styles/global.css';
+import Logo from '../components/Logo.astro';
+import DockwizeMark from '../components/DockwizeMark.astro';
+---
+<!doctype html>
+<html lang="nl" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>Camping aanmelden · Peil</title>
+  </head>
+  <body class="min-h-full">
+    <div class="grid min-h-screen place-items-center px-4 py-10">
+      <div class="w-full max-w-lg">
+        <div class="flex items-center justify-between">
+          <a href="/"><Logo /></a>
+          <span class="flex items-center gap-1.5 text-xs font-medium text-faint"><DockwizeMark size={16} /> WaterWijs</span>
+        </div>
+
+        <div class="card mt-5 p-6 shadow-soft">
+          <h1 class="font-display text-xl font-bold tracking-tight text-ink">Camping aanmelden</h1>
+          <p class="mt-1 text-sm text-muted">Eenmalig je camping instellen. Daarna leg je elke week alleen nog de waterstand, bezoekers en bezetting vast.</p>
+
+          <form id="form" class="mt-5 space-y-4">
+            <div class="grid gap-4 sm:grid-cols-2">
+              <label class="block sm:col-span-2">
+                <span class="mb-1.5 block text-sm font-semibold text-deep">Naam van je camping</span>
+                <input id="f-naam" type="text" required placeholder="Minicamping ..." class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
+              </label>
+              <label class="block">
+                <span class="mb-1.5 block text-sm font-semibold text-deep">Plaats</span>
+                <input id="f-plaats" type="text" placeholder="Dorp / stad" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
+              </label>
+              <label class="block">
+                <span class="mb-1.5 flex items-center justify-between text-sm font-semibold text-deep">Beginstand watermeter <span class="text-xs font-medium text-faint">m³</span></span>
+                <input id="f-meter" type="number" inputmode="decimal" step="0.1" min="0" placeholder="0,0" class="tnum w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
+              </label>
+            </div>
+
+            <div>
+              <p class="mb-2 text-sm font-semibold text-deep">Soorten plekken</p>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between gap-3 rounded-[10px] border border-line bg-white px-3 py-2">
+                  <span class="text-sm font-medium text-deep">Toeristische staplaatsen</span>
+                  <input id="t-staplaats" type="number" inputmode="numeric" min="0" value="0" class="tnum w-20 rounded-[8px] border border-line bg-white px-2.5 py-1.5 text-right text-sm font-semibold text-ink" />
+                </div>
+                <div class="flex items-center justify-between gap-3 rounded-[10px] border border-line bg-white px-3 py-2">
+                  <span class="text-sm font-medium text-deep">Camperplaatsen</span>
+                  <input id="t-camperplaats" type="number" inputmode="numeric" min="0" value="0" class="tnum w-20 rounded-[8px] border border-line bg-white px-2.5 py-1.5 text-right text-sm font-semibold text-ink" />
+                </div>
+                <div class="flex items-center justify-between gap-3 rounded-[10px] border border-line bg-white px-3 py-2">
+                  <span class="text-sm font-medium text-deep">Chalets / huuraccommodaties</span>
+                  <input id="t-chalet" type="number" inputmode="numeric" min="0" value="0" class="tnum w-20 rounded-[8px] border border-line bg-white px-2.5 py-1.5 text-right text-sm font-semibold text-ink" />
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between rounded-[10px] border border-line bg-surface-2 px-4 py-3">
+              <div>
+                <p class="text-sm font-semibold text-deep">Winterkamperen</p>
+                <p class="text-xs text-faint">Camping ook in de winter open</p>
+              </div>
+              <button id="f-winter" type="button" role="switch" aria-checked="false" class="peil-switch"></button>
+            </div>
+
+            <p id="err" class="hidden text-sm font-medium text-high"></p>
+            <button type="submit" class="btn btn-primary w-full py-2.5">Camping aanmelden</button>
+          </form>
+        </div>
+
+        <p class="mt-4 text-center text-sm text-muted"><a href="/login" class="font-semibold text-ink hover:underline">Terug naar inloggen</a></p>
+      </div>
+    </div>
+
+    <style>
+      .peil-switch { position: relative; height: 26px; width: 46px; border-radius: 999px; background: var(--color-border-strong); transition: background .2s; flex-shrink: 0; }
+      .peil-switch::after { content: ''; position: absolute; top: 3px; left: 3px; height: 20px; width: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s var(--ease-out-soft); }
+      .peil-switch[aria-checked='true'] { background: var(--color-ink); }
+      .peil-switch[aria-checked='true']::after { transform: translateX(20px); }
+    </style>
+
+    <script>
+      import { createCamping, setRole } from '../lib/store';
+      import type { PlaatsType } from '../lib/store';
+
+      const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+      const winter = $('f-winter');
+      winter.addEventListener('click', () => winter.setAttribute('aria-checked', String(winter.getAttribute('aria-checked') !== 'true')));
+
+      const showErr = (m: string) => { const e = $('err'); e.textContent = m; e.classList.remove('hidden'); };
+
+      $<HTMLFormElement>('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const naam = $<HTMLInputElement>('f-naam').value.trim();
+        if (!naam) { showErr('Vul de naam van je camping in.'); $('f-naam').focus(); return; }
+        const sta = parseInt($<HTMLInputElement>('t-staplaats').value || '0', 10);
+        const cam = parseInt($<HTMLInputElement>('t-camperplaats').value || '0', 10);
+        const cha = parseInt($<HTMLInputElement>('t-chalet').value || '0', 10);
+        const types: PlaatsType[] = [];
+        if (sta > 0) types.push({ id: 'staplaats', label: 'Toeristische staplaats', aantal: sta });
+        if (cam > 0) types.push({ id: 'camperplaats', label: 'Camperplaats', aantal: cam });
+        if (cha > 0) types.push({ id: 'chalet', label: 'Chalet / huuraccommodatie', aantal: cha });
+        if (!types.length) { showErr('Vul minstens één soort plek in (aantal groter dan 0).'); return; }
+
+        const btn = e.submitter as HTMLButtonElement | null;
+        if (btn) { btn.disabled = true; btn.textContent = 'Bezig met aanmelden...'; }
+        try {
+          const c = await createCamping({
+            naam,
+            plaats: $<HTMLInputElement>('f-plaats').value.trim(),
+            types,
+            winterkamperen: winter.getAttribute('aria-checked') === 'true',
+            meterStart: parseFloat($<HTMLInputElement>('f-meter').value.replace(',', '.')) || 0,
+          });
+          setRole(c.id);
+          location.assign('/dashboard');
+        } catch {
+          showErr('Aanmelden mislukt. Probeer het opnieuw.');
+          if (btn) { btn.disabled = false; btn.textContent = 'Camping aanmelden'; }
+        }
+      });
+    </script>
+  </body>
+</html>

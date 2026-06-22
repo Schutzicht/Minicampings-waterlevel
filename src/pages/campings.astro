@@ -7,6 +7,10 @@ import AppLayout from '../layouts/AppLayout.astro';
   title="Campings"
   subtitle="De aangesloten minicampings in de regio. Klik een camping aan voor de volledige weekhistorie en grafieken."
 >
+  <a slot="actions" id="addCampingBtn" href="/aanmelden" class="btn btn-primary hidden px-3.5 py-2 text-sm">
+    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    <span class="hidden sm:inline">Camping toevoegen</span><span class="sm:hidden">Toevoegen</span>
+  </a>
   <div id="scopeNote" class="mb-4 hidden items-center gap-2 rounded-[10px] border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink-2"></div>
   <div id="campingGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
 </AppLayout>
@@ -24,11 +28,18 @@ import AppLayout from '../layouts/AppLayout.astro';
       const own = scopedCampings()[0];
       note.classList.remove('hidden'); note.classList.add('flex');
       note.innerHTML = `<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="min-w-0">Je ziet alleen je eigen camping.</span><a href="/instellingen?c=${own.slug}" class="ml-auto inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-ink hover:underline">Eigenschappen bewerken<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>`;
+      document.getElementById('addCampingBtn')?.classList.add('hidden');
     } else {
       note.classList.add('hidden'); note.classList.remove('flex');
+      document.getElementById('addCampingBtn')?.classList.remove('hidden');
     }
     const grid = document.getElementById('campingGrid')!;
-    grid.innerHTML = campingSummaries().filter((s) => ids.has(s.camping.id)).map((s) => `
+    const filtered = campingSummaries().filter((s) => ids.has(s.camping.id));
+    if (!filtered.length) {
+      grid.innerHTML = `<div class="card grid place-items-center gap-2 p-10 text-center sm:col-span-2 lg:col-span-3"><p class="font-display text-lg font-bold text-ink">Nog geen campings</p><p class="max-w-sm text-sm text-muted">Meld de eerste minicamping aan om te beginnen met meten.</p><a href="/aanmelden" class="btn btn-primary mt-2 px-4 py-2 text-sm">Camping aanmelden</a></div>`;
+      return;
+    }
+    grid.innerHTML = filtered.map((s) => `
       <a href="/camping?c=${s.camping.slug}" class="card reveal is-in group overflow-hidden transition-shadow hover:shadow-lift">
         <div class="relative h-36 w-full overflow-hidden water-grad">
           ${sparkSafeImg(s.camping.cover, s.camping.naam)}

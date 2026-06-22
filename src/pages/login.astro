@@ -2,11 +2,6 @@
 import '../styles/global.css';
 import Logo from '../components/Logo.astro';
 import DockwizeMark from '../components/DockwizeMark.astro';
-import { getCampings } from '../lib/store';
-
-const campings = getCampings();
-const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '');
-const mono = (n: string) => short(n).replace("'t ", '').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 ---
 <!doctype html>
 <html lang="nl" class="h-full">
@@ -41,22 +36,23 @@ const mono = (n: string) => short(n).replace("'t ", '').split(' ').slice(0, 2).m
               <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
 
-            <p class="px-1 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-faint">Camping-eigenaren</p>
-            {campings.map((c) => (
-              <button data-role={c.id} class="account-btn">
-                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-[var(--color-accent-soft)] text-[11px] font-bold text-ink">{mono(c.naam)}</span>
-                <span class="min-w-0 flex-1 text-left">
-                  <span class="block truncate text-sm font-semibold text-ink">{short(c.naam)}</span>
-                  <span class="block text-xs text-faint">Eigenaar · {c.plaats}</span>
-                </span>
-                <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              </button>
-            ))}
+            <p id="eigLabel" class="hidden px-1 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-faint">Camping-eigenaren</p>
+            <div id="accountList" class="space-y-2"></div>
+
+            <a href="/aanmelden" class="account-btn mt-1">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-dashed border-[var(--color-border-strong)] text-[var(--color-ink-2)]">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              </span>
+              <span class="min-w-0 flex-1 text-left">
+                <span class="block text-sm font-semibold text-ink">Nieuwe camping aanmelden</span>
+                <span class="block text-xs text-faint">Zet je camping in een minuut op</span>
+              </span>
+              <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
           </div>
 
           <p class="mt-5 border-t border-line-soft pt-4 text-xs leading-relaxed text-faint">
-            Demo: kies een account om te ervaren wat die gebruiker ziet. In productie logt elke camping in met eigen
-            gegevens en kan niemand bij de cijfers van een ander.
+            Een camping-eigenaar ziet en beheert alleen de eigen camping. De regio-beheerder ziet alle aangesloten campings.
           </p>
         </div>
       </div>
@@ -69,13 +65,35 @@ const mono = (n: string) => short(n).replace("'t ", '').split(' ').slice(0, 2).m
     </style>
 
     <script>
-      import { setRole } from '../lib/store';
-      document.querySelectorAll<HTMLButtonElement>('[data-role]').forEach((b) =>
-        b.addEventListener('click', () => {
-          setRole(b.dataset.role!);
-          location.assign('/dashboard');
-        }),
-      );
+      import { ensureLoaded, getCampings, setRole } from '../lib/store';
+
+      const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '');
+      const mono = (n: string) => short(n).replace("'t ", '').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+      function go(role: string) {
+        setRole(role);
+        location.assign('/dashboard');
+      }
+
+      document.querySelector<HTMLButtonElement>('[data-role="regio"]')!.addEventListener('click', () => go('regio'));
+
+      ensureLoaded().then(() => {
+        const campings = getCampings();
+        const list = document.getElementById('accountList')!;
+        if (campings.length) {
+          document.getElementById('eigLabel')!.classList.remove('hidden');
+          list.innerHTML = campings.map((c) => `
+            <button data-role="${c.id}" class="account-btn">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-[var(--color-accent-soft)] text-[11px] font-bold text-ink">${mono(c.naam)}</span>
+              <span class="min-w-0 flex-1 text-left">
+                <span class="block truncate text-sm font-semibold text-ink">${short(c.naam)}</span>
+                <span class="block text-xs text-faint">Eigenaar · ${c.plaats || 'camping'}</span>
+              </span>
+              <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>`).join('');
+          list.querySelectorAll<HTMLButtonElement>('[data-role]').forEach((b) => b.addEventListener('click', () => go(b.dataset.role!)));
+        }
+      });
     </script>
   </body>
 </html>

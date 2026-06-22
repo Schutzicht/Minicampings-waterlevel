@@ -73,7 +73,7 @@ const mobileNav = [
     <DemoTour />
 
     <script>
-      import { currentWeekStatus, resetDemo, getRole, getCamping, roleScope, currentWeek, readingForWeek } from '../lib/store';
+      import { currentWeekStatus, getRole, getCamping, roleScope, currentWeek, readingForWeek } from '../lib/store';
 
       // Toont het ingelogde account (wisselen gaat via /login)
       const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '').replace(/^De |^'t /, '');
@@ -116,15 +116,6 @@ const mobileNav = [
       }
       paintWeekPill();
       window.addEventListener('peil:change', paintWeekPill);
-
-      document.querySelectorAll('[data-reset]').forEach((b) =>
-        b.addEventListener('click', async () => {
-          if (confirm('Demo-data terugzetten naar de uitgangssituatie?')) {
-            await resetDemo();
-            location.reload();
-          }
-        }),
-      );
 
       const io = new IntersectionObserver(
         (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('is-in')),
