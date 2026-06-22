@@ -74,7 +74,7 @@ const steps = [
 
 <script>
   import {
-    getCampings, getCamping, currentWeek, readingsFor, previousMeterstand, verbruikOf,
+    ensureLoaded, getCampings, getCamping, currentWeek, readingsFor, previousMeterstand, verbruikOf,
     readingForWeek, addOrUpdateReading, distributeOccupancy,
   } from '../lib/store';
   import { sparkSafeImg } from '../lib/ui';
@@ -159,6 +159,8 @@ const steps = [
     renderList();
   });
 
-  renderList();
-  window.addEventListener('peil:change', renderList);
+  ensureLoaded().then(() => {
+    renderList();
+    window.addEventListener('peil:change', renderList);
+  });
 </script>

@@ -109,7 +109,7 @@ import Icon from '../components/Icon.astro';
 
 <script>
   import {
-    getCampings, getCamping, currentWeek, weekRangeLabel, readingForWeek,
+    ensureLoaded, getCampings, getCamping, currentWeek, weekRangeLabel, readingForWeek,
     previousMeterstand, addOrUpdateReading, currentWeekStatus, load, roleScope,
     fmt1, fmtInt,
   } from '../lib/store';
@@ -124,6 +124,7 @@ import Icon from '../components/Icon.astro';
 
   const { year } = currentWeek();
 
+  ensureLoaded().then(() => {
   // camping-opties
   const campings = getCampings();
   campingSel.innerHTML = campings.map((c) => `<option value="${c.slug}">${c.naam} · ${c.plaats}</option>`).join('');
@@ -332,4 +333,5 @@ import Icon from '../components/Icon.astro';
   syncFormFromState();
   renderRecent();
   window.addEventListener('peil:change', renderRecent);
+  });
 </script>

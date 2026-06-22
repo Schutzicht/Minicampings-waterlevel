@@ -7,7 +7,7 @@ import AppLayout from '../layouts/AppLayout.astro';
 
 <script>
   import {
-    getCamping, readingsFor, campingWeekly, verbruikOf, literPerBezoeker,
+    ensureLoaded, getCamping, readingsFor, campingWeekly, verbruikOf, literPerBezoeker,
     bezettingsgraad, weekRangeLabel, currentWeek, readingForWeek,
     fmt1, fmtInt, fmtPct,
   } from '../lib/store';
@@ -15,6 +15,8 @@ import AppLayout from '../layouts/AppLayout.astro';
   import { effColor, effLabel, sparkSafeImg } from '../lib/ui';
 
   const root = document.getElementById('detailRoot')!;
+
+  ensureLoaded().then(() => {
   const slug = new URLSearchParams(location.search).get('c') ?? '';
   const c = getCamping(slug);
 
@@ -151,4 +153,5 @@ import AppLayout from '../layouts/AppLayout.astro';
     );
     draw();
   }
+  });
 </script>

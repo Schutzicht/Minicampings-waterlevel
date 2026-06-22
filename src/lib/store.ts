@@ -1,8 +1,11 @@
 // -----------------------------------------------------------------------------
-// Peil - client-side data layer (localStorage).
-// No database yet: all state lives in the browser. Seed data is generated once
-// relative to the current ISO week so the demo always looks "live".
+// Peil - data layer (Supabase). De leeslaag werkt synchroon vanuit een
+// in-memory cache; roep eerst `ensureLoaded()` aan om die te vullen uit de
+// database. Schrijfacties updaten de cache direct en pushen async naar Supabase.
+// Op de server (build) valt alles terug op een lokale seed.
 // -----------------------------------------------------------------------------
+
+import { sb } from './supabase';
 
 export type Bron = 'handmatig' | 'homewizard';
 
@@ -44,11 +47,9 @@ export interface AppState {
   readings: Reading[];
 }
 
-const STORAGE_KEY = 'peil:v1';
 const VERSION = 4;
 const HISTORY_WEEKS = 10; // aantal weken seed-historie incl. huidige week
 const ROLE_KEY = 'peil:role';
-const REMINDER_KEY = 'peil:reminders';
 
 // -----------------------------------------------------------------------------
 // Camping-metadata (seed)
@@ -222,48 +223,109 @@ function generateSeed(now = new Date()): AppState {
 }
 
 // -----------------------------------------------------------------------------
-// Persistentie
+// Persistentie (Supabase + in-memory cache)
 // -----------------------------------------------------------------------------
 
 let cache: AppState | null = null;
+let hydrated = false;
+let hydrating: Promise<void> | null = null;
+let settingsCache: Record<string, ReminderPrefs> = {};
 
+const num = (v: unknown) => (typeof v === 'number' ? v : parseFloat(String(v ?? 0)) || 0);
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function toCampingRow(c: Camping, sort: number) {
+  return { id: c.id, slug: c.slug, naam: c.naam, plaats: c.plaats, pitches: c.pitches, types: c.types, winterkamperen: c.winterkamperen, cover: c.cover, meter_start: c.meterStart, sort };
+}
+function fromCampingRow(r: any): Camping {
+  return { id: r.id, slug: r.slug, naam: r.naam, plaats: r.plaats, pitches: r.pitches, types: r.types ?? [], winterkamperen: !!r.winterkamperen, cover: r.cover ?? '', meterStart: num(r.meter_start) };
+}
+function toReadingRow(r: Reading) {
+  return { id: r.id, camping_id: r.campingId, jaar: r.jaar, week: r.week, meterstand: r.meterstand, bezoekers: r.bezoekers, bezetting: r.bezetting, bezetting_per_type: r.bezettingPerType ?? {}, bron: r.bron, datum: r.datum };
+}
+function fromReadingRow(r: any): Reading {
+  return { id: r.id, campingId: r.camping_id, jaar: r.jaar, week: r.week, meterstand: num(r.meterstand), bezoekers: r.bezoekers, bezetting: r.bezetting, bezettingPerType: r.bezetting_per_type ?? {}, bron: r.bron, datum: r.datum };
+}
+
+/** Synchroon: geeft de huidige cache (of een lokale seed op de server / vóór hydrate). */
 export function load(): AppState {
-  if (cache) return cache;
-  if (typeof localStorage === 'undefined') {
-    cache = generateSeed();
-    return cache;
-  }
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as AppState;
-      if (parsed && parsed.version === VERSION) {
-        cache = parsed;
-        return cache;
-      }
-    }
-  } catch {
-    // val terug op een verse seed
-  }
-  cache = generateSeed();
-  save(cache);
+  if (!cache) cache = generateSeed();
   return cache;
 }
 
-export function save(state: AppState): void {
-  cache = state;
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function emitChange() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('peil:change'));
+}
+
+/** Vult de cache uit Supabase. Seedt de database als die nog leeg is. Idempotent. */
+export function ensureLoaded(): Promise<void> {
+  if (typeof window === 'undefined' || hydrated) return Promise.resolve();
+  if (hydrating) return hydrating;
+  hydrating = (async () => {
+    try {
+      const { data: camps, error } = await sb.from('campings').select('*').order('sort');
+      if (error) throw error;
+      if (!camps || camps.length === 0) {
+        const seed = generateSeed();
+        await sb.from('campings').upsert(seed.campings.map((c, i) => toCampingRow(c, i)), { onConflict: 'id' });
+        await sb.from('readings').upsert(seed.readings.map(toReadingRow), { onConflict: 'id' });
+        cache = seed;
+      } else {
+        const [{ data: reads }, { data: setts }] = await Promise.all([
+          sb.from('readings').select('*'),
+          sb.from('settings').select('*'),
+        ]);
+        cache = {
+          version: VERSION,
+          seededWeek: 0,
+          campings: camps.map(fromCampingRow),
+          readings: (reads ?? []).map(fromReadingRow),
+        };
+        settingsCache = {};
+        for (const s of setts ?? []) settingsCache[s.camping_id] = { email: !!s.email, adres: s.adres ?? '', dag: s.dag ?? 'ma', push: !!s.push };
+      }
+      hydrated = true;
+    } catch (e) {
+      console.error('Peil: laden uit Supabase mislukt, lokale seed gebruikt.', e);
+      if (!cache) cache = generateSeed();
+      hydrated = true;
+    }
+    emitChange();
+  })();
+  return hydrating;
+}
+
+async function pushReading(r: Reading) {
+  try {
+    await sb.from('readings').upsert(toReadingRow(r), { onConflict: 'id' });
+  } catch (e) {
+    console.error('Peil: opslaan reading mislukt.', e);
   }
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('peil:change'));
+}
+async function pushCamping(c: Camping) {
+  try {
+    const sort = load().campings.findIndex((x) => x.id === c.id);
+    await sb.from('campings').upsert(toCampingRow(c, sort < 0 ? 0 : sort), { onConflict: 'id' });
+  } catch (e) {
+    console.error('Peil: opslaan camping mislukt.', e);
   }
 }
 
-export function resetDemo(): void {
-  cache = null;
-  if (typeof localStorage !== 'undefined') localStorage.removeItem(STORAGE_KEY);
-  load();
+/** Zet de demo terug: leegt de database en seedt opnieuw. */
+export async function resetDemo(): Promise<void> {
+  const seed = generateSeed();
+  try {
+    await sb.from('readings').delete().neq('id', '');
+    await sb.from('campings').delete().neq('id', '');
+    await sb.from('campings').insert(seed.campings.map((c, i) => toCampingRow(c, i)));
+    await sb.from('readings').insert(seed.readings.map(toReadingRow));
+  } catch (e) {
+    console.error('Peil: reset mislukt.', e);
+  }
+  cache = seed;
+  settingsCache = {};
+  hydrated = true;
+  emitChange();
 }
 
 // -----------------------------------------------------------------------------
@@ -352,7 +414,8 @@ export function addOrUpdateReading(input: ReadingInput): Reading {
   } else {
     state.readings.push(reading);
   }
-  save(state);
+  emitChange();
+  void pushReading(reading);
   return reading;
 }
 
@@ -577,7 +640,8 @@ export function updateCamping(id: string, patch: CampingPatch): Camping | undefi
     c.types = patch.types;
     c.pitches = patch.types.reduce((s, t) => s + (t.aantal || 0), 0);
   }
-  save(state);
+  emitChange();
+  void pushCamping(c);
   return c;
 }
 
@@ -629,23 +693,16 @@ export interface ReminderPrefs {
 const DEFAULT_REMINDER: ReminderPrefs = { email: true, adres: '', dag: 'ma', push: false };
 
 export function getReminderPrefs(campingId: string): ReminderPrefs {
-  if (typeof localStorage === 'undefined') return { ...DEFAULT_REMINDER };
-  try {
-    const all = JSON.parse(localStorage.getItem(REMINDER_KEY) || '{}');
-    return { ...DEFAULT_REMINDER, ...(all[campingId] || {}) };
-  } catch {
-    return { ...DEFAULT_REMINDER };
-  }
+  return { ...DEFAULT_REMINDER, ...(settingsCache[campingId] || {}) };
 }
 
 export function setReminderPrefs(campingId: string, prefs: ReminderPrefs): void {
-  if (typeof localStorage === 'undefined') return;
-  let all: Record<string, ReminderPrefs> = {};
-  try {
-    all = JSON.parse(localStorage.getItem(REMINDER_KEY) || '{}');
-  } catch {
-    all = {};
-  }
-  all[campingId] = prefs;
-  localStorage.setItem(REMINDER_KEY, JSON.stringify(all));
+  settingsCache[campingId] = prefs;
+  void (async () => {
+    try {
+      await sb.from('settings').upsert({ camping_id: campingId, ...prefs }, { onConflict: 'camping_id' });
+    } catch (e) {
+      console.error('Peil: opslaan herinneringen mislukt.', e);
+    }
+  })();
 }

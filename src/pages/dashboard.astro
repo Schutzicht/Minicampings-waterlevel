@@ -88,7 +88,7 @@ const kpis = [
 
 <script>
   import {
-    regionWeeklyTotals, getCampings, campingSummaries, currentWeekStatus,
+    ensureLoaded, regionWeeklyTotals, getCampings, campingSummaries, currentWeekStatus,
     campingWeekly, readingForWeek, currentWeek, benchmark, roleScope,
     weekRangeLabel, fmtInt, fmt1, fmtPct,
   } from '../lib/store';
@@ -248,5 +248,5 @@ const kpis = [
     else renderEigenaar(scope.camping);
   }
 
-  render();
+  ensureLoaded().then(render);
 </script>

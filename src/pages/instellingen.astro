@@ -122,12 +122,13 @@ const dagen = [
 </style>
 
 <script>
-  import { getCamping, getCampings, updateCamping, roleScope, getReminderPrefs, setReminderPrefs } from '../lib/store';
+  import { ensureLoaded, getCamping, getCampings, updateCamping, roleScope, getReminderPrefs, setReminderPrefs } from '../lib/store';
   import type { PlaatsType } from '../lib/store';
 
   const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
   const toast = (m: string) => (window as any).peilToast?.(m);
 
+  ensureLoaded().then(() => {
   const scope = roleScope();
   const paramC = new URLSearchParams(location.search).get('c');
   const byParam = paramC ? getCamping(paramC) : undefined;
@@ -242,4 +243,5 @@ const dagen = [
 
   loadProfile();
   loadReminders();
+  });
 </script>

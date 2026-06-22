@@ -118,9 +118,9 @@ const mobileNav = [
       window.addEventListener('peil:change', paintWeekPill);
 
       document.querySelectorAll('[data-reset]').forEach((b) =>
-        b.addEventListener('click', () => {
+        b.addEventListener('click', async () => {
           if (confirm('Demo-data terugzetten naar de uitgangssituatie?')) {
-            resetDemo();
+            await resetDemo();
             location.reload();
           }
         }),

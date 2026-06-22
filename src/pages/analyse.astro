@@ -77,7 +77,7 @@ import Icon from '../components/Icon.astro';
 </AppLayout>
 
 <script>
-  import { benchmark, campingWeekly, roleScope, fmt1, fmtInt, fmtPct } from '../lib/store';
+  import { ensureLoaded, benchmark, campingWeekly, roleScope, fmt1, fmtInt, fmtPct } from '../lib/store';
   import { renderBarChart, renderAreaChart } from '../lib/charts';
   import { effColor, effLabel } from '../lib/ui';
 
@@ -144,6 +144,8 @@ import Icon from '../components/Icon.astro';
       .join('');
   }
 
-  render();
-  window.addEventListener('peil:change', render);
+  ensureLoaded().then(() => {
+    render();
+    window.addEventListener('peil:change', render);
+  });
 </script>
