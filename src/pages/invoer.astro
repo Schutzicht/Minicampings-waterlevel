@@ -109,7 +109,7 @@ import Icon from '../components/Icon.astro';
 
 <script>
   import {
-    ensureLoaded, getCampings, getCamping, currentWeek, weekRangeLabel, readingForWeek,
+    ensureLoaded, getCampings, getCamping, currentWeek, weekRangeLabel, readingForWeek, readingsFor,
     previousMeterstand, addOrUpdateReading, currentWeekStatus, load, roleScope,
     fmt1, fmtInt,
   } from '../lib/store';
@@ -139,12 +139,7 @@ import Icon from '../components/Icon.astro';
 
   campingSel.innerHTML = campings.map((c) => `<option value="${c.slug}">${c.naam} · ${c.plaats}</option>`).join('');
 
-  // week-opties: huidige week + 7 ervoor
   const cur = currentWeek().week;
-  const weeks = Array.from({ length: 8 }, (_, i) => cur - i).filter((w) => w >= 1);
-  weekSel.innerHTML = weeks
-    .map((w, i) => `<option value="${w}">Week ${w} · ${weekRangeLabel(year, w)}${i === 0 ? ' (deze week)' : ''}</option>`)
-    .join('');
 
   // preselect via ?camping=
   const params = new URLSearchParams(location.search);
@@ -164,6 +159,25 @@ import Icon from '../components/Icon.astro';
   function selectedCamping() {
     return getCamping(campingSel.value)!;
   }
+
+  // Weekkeuze: recente weken + weken die al ingevuld zijn, zodat je achteraf kunt wijzigen.
+  const preWeek = parseInt(params.get('week') || '', 10);
+  function rebuildWeeks(prefer?: number) {
+    const c = getCamping(campingSel.value);
+    const set = new Set<number>();
+    for (let i = 0; i < 12; i++) { const w = cur - i; if (w >= 1) set.add(w); }
+    if (c) readingsFor(c.id).forEach((r) => { if (r.jaar === year) set.add(r.week); });
+    if (prefer && prefer >= 1) set.add(prefer);
+    const weeks = [...set].sort((a, b) => b - a);
+    weekSel.innerHTML = weeks
+      .map((w) => {
+        const tag = w === cur ? ' (deze week)' : c && readingForWeek(c.id, year, w) ? ' · ingevuld' : '';
+        return `<option value="${w}">Week ${w} · ${weekRangeLabel(year, w)}${tag}</option>`;
+      })
+      .join('');
+    weekSel.value = String(prefer && weeks.includes(prefer) ? prefer : cur);
+  }
+  rebuildWeeks(Number.isFinite(preWeek) ? preWeek : undefined);
 
   function renderBezTypes(c: ReturnType<typeof selectedCamping>, existing?: ReturnType<typeof readingForWeek>) {
     bezTypesWrap.innerHTML = c.types
@@ -292,21 +306,23 @@ import Icon from '../components/Icon.astro';
         return all.length ? all[all.length - 1].meterstand : getCamping(r.campingId)!.meterStart;
       })();
       const verbruik = Math.max(0, Math.round((r.meterstand - prev) * 10) / 10);
-      return `<div class="flex items-center justify-between gap-3 px-4 py-3">
+      const slug = getCamping(r.campingId)?.slug ?? r.campingId;
+      return `<a href="/invoer?camping=${slug}&week=${r.week}" class="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
         <div class="min-w-0">
           <p class="truncate text-sm font-semibold text-deep">${nameOf(r.campingId)}</p>
           <p class="text-xs text-faint">Week ${r.week} · ${weekRangeLabel(r.jaar, r.week)}</p>
         </div>
-        <div class="flex items-center gap-4 text-right">
+        <div class="flex items-center gap-3 text-right sm:gap-4">
           <div><p class="tnum text-sm font-bold text-deep">${fmt1(verbruik)}<span class="text-[0.65rem] font-medium text-faint"> m³</span></p><p class="text-[0.65rem] text-faint">${fmtInt(r.bezoekers)} gasten</p></div>
           <span class="chip ${r.bron === 'homewizard' ? 'bg-mist text-brand' : 'bg-line-soft text-muted'}">${r.bron === 'homewizard' ? 'HomeWizard' : 'Handmatig'}</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-ink">Wijzig<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
         </div>
-      </div>`;
+      </a>`;
     }).join('');
   }
 
   // events
-  campingSel.addEventListener('change', syncFormFromState);
+  campingSel.addEventListener('change', () => { rebuildWeeks(Number(weekSel.value)); syncFormFromState(); });
   weekSel.addEventListener('change', syncFormFromState);
   meterInp.addEventListener('input', recalc);
   bezoekersInp.addEventListener('input', recalc);
@@ -330,6 +346,7 @@ import Icon from '../components/Icon.astro';
       const next = nextOpen(c.slug);
       if (next && week === cur) campingSel.value = next;
     }
+    rebuildWeeks(Number(weekSel.value));
     syncFormFromState();
   });
 
