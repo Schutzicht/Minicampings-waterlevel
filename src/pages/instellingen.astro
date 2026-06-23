@@ -43,6 +43,11 @@ const dagen = [
           <span class="mb-1.5 block text-sm font-semibold text-deep">Plaats</span>
           <input id="p-plaats" type="text" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
         </label>
+        <label class="block sm:col-span-2">
+          <span class="mb-1.5 flex items-center justify-between text-sm font-semibold text-deep">Beginstand watermeter <span class="text-xs font-medium text-faint">m³</span></span>
+          <input id="p-meterstart" type="number" inputmode="decimal" step="0.1" min="0" placeholder="0,0" class="tnum w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
+          <span class="mt-1 block text-xs text-faint">De meterstand vóór je eerste ingevulde week. Hiermee klopt het verbruik vanaf week 1. Mag je later invullen.</span>
+        </label>
       </div>
 
       <div class="mt-5">
@@ -188,6 +193,7 @@ const dagen = [
     const c = getCamping(currentId)!;
     $<HTMLInputElement>('p-naam').value = c.naam;
     $<HTMLInputElement>('p-plaats').value = c.plaats;
+    $<HTMLInputElement>('p-meterstart').value = c.meterStart ? String(c.meterStart) : '';
     setSwitch('p-winter', c.winterkamperen);
     $('typeRows').innerHTML = '';
     c.types.forEach((t) => addTypeRow(t));
@@ -205,6 +211,7 @@ const dagen = [
     updateCamping(currentId, {
       naam: $<HTMLInputElement>('p-naam').value.trim() || getCamping(currentId)!.naam,
       plaats: $<HTMLInputElement>('p-plaats').value.trim(),
+      meterStart: parseFloat($<HTMLInputElement>('p-meterstart').value.replace(',', '.')) || 0,
       winterkamperen: getSwitch('p-winter'),
       types: types.length ? types : getCamping(currentId)!.types,
     });

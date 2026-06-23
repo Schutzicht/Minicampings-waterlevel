@@ -585,6 +585,7 @@ export interface CampingPatch {
   plaats?: string;
   winterkamperen?: boolean;
   types?: PlaatsType[];
+  meterStart?: number;
 }
 
 export function updateCamping(id: string, patch: CampingPatch): Camping | undefined {
@@ -594,6 +595,7 @@ export function updateCamping(id: string, patch: CampingPatch): Camping | undefi
   if (patch.naam !== undefined) c.naam = patch.naam;
   if (patch.plaats !== undefined) c.plaats = patch.plaats;
   if (patch.winterkamperen !== undefined) c.winterkamperen = patch.winterkamperen;
+  if (patch.meterStart !== undefined) c.meterStart = patch.meterStart;
   if (patch.types !== undefined) {
     c.types = patch.types;
     c.pitches = patch.types.reduce((s, t) => s + (t.aantal || 0), 0);
