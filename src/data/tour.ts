@@ -66,7 +66,7 @@ export const TOUR: TourStop[] = [
     route: '/homewizard',
     selector: '#hw-read',
     title: 'Straks automatisch',
-    body: 'Met een HomeWizard Watermeter leest Peil de waterstand vanzelf uit. Probeer hier de gesimuleerde uitlezing.',
+    body: 'Met een HomeWizard Watermeter leest Peil de waterstand straks vanzelf uit. Hier kun je je camping daarvoor aanmelden.',
   },
   {
     group: 'Slim & beheer',

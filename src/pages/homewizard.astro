@@ -53,114 +53,74 @@ const steps = [
     ))}
   </section>
 
-  <!-- Live demo van de koppeling -->
+  <!-- Aanmelden voor de koppeling -->
   <section class="mt-6 card overflow-hidden reveal">
-    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-mist/50 px-5 py-4">
-      <div>
-        <h2 class="font-display text-lg font-bold text-ink">Gekoppelde apparaten</h2>
-        <p class="text-xs text-faint">Probeer het uit: koppel een camping en laat Peil de stand uitlezen.</p>
-      </div>
-      <button id="hw-read" class="btn btn-primary px-4 py-2 text-sm">
-        <Icon name="homewizard" size={17} /> Lees gekoppelde uit
-      </button>
+    <div class="border-b border-line bg-mist/50 px-5 py-4">
+      <h2 class="font-display text-lg font-bold text-ink">Doe mee met de koppeling</h2>
+      <p class="text-xs text-faint">Geef aan dat je camping straks automatisch uitgelezen wil worden. Vrijblijvend, we laten het weten zodra het zover is.</p>
     </div>
     <div id="hw-list" class="divide-y divide-line-soft"></div>
     <div class="flex items-center gap-2 border-t border-line bg-canvas px-5 py-3 text-xs text-faint">
       <Icon name="shield" size={14} class="text-faint" />
-      In deze demo wordt de uitlezing gesimuleerd. In de echte koppeling gebeurt dit via de officiele HomeWizard API.
+      De automatische uitlezing via de HomeWizard Watermeter is in ontwikkeling. Aanmelden verandert nog niets aan je cijfers.
     </div>
   </section>
 </AppLayout>
 
 <script>
-  import {
-    ensureLoaded, getCampings, getCamping, currentWeek, readingsFor, previousMeterstand, verbruikOf,
-    readingForWeek, addOrUpdateReading, distributeOccupancy,
-  } from '../lib/store';
+  import { ensureLoaded, scopedCampings } from '../lib/store';
   import { sparkSafeImg } from '../lib/ui';
 
   const HW_KEY = 'peil:hw';
-  const { year, week } = currentWeek();
 
-  function getConnected(): Set<string> {
+  function getAangemeld(): Set<string> {
     try {
       const raw = localStorage.getItem(HW_KEY);
       return new Set(raw ? JSON.parse(raw) : []);
     } catch {
-      return new Set([]);
+      return new Set();
     }
   }
-  function setConnected(s: Set<string>) {
+  function setAangemeld(s: Set<string>) {
     localStorage.setItem(HW_KEY, JSON.stringify([...s]));
   }
 
-  function estimate(campingId: string) {
-    const rs = readingsFor(campingId);
-    const prev = previousMeterstand(campingId, year, week);
-    const last = rs[rs.length - 1];
-    const base = last ? Math.max(2, verbruikOf(last)) : 6;
-    const verbruik = Math.round(base * (0.96 + Math.random() * 0.12) * 10) / 10;
-    const bezetting = last ? last.bezetting : 0;
-    const c = getCamping(campingId);
-    return {
-      meterstand: Math.round((prev + verbruik) * 10) / 10,
-      bezoekers: last ? Math.round(last.bezoekers * (0.95 + Math.random() * 0.14)) : 0,
-      bezetting,
-      bezettingPerType: c ? distributeOccupancy(c.types, bezetting) : undefined,
-    };
-  }
-
   function renderList() {
-    const connected = getConnected();
+    const aangemeld = getAangemeld();
     const list = document.getElementById('hw-list')!;
-    list.innerHTML = getCampings().map((c) => {
-      const isConn = connected.has(c.id);
-      const reading = readingForWeek(c.id, year, week);
-      const readByHw = reading?.bron === 'homewizard';
+    const campings = scopedCampings();
+    if (!campings.length) {
+      list.innerHTML = `<div class="px-5 py-6 text-center text-sm text-faint">Nog geen camping om aan te melden.</div>`;
+      return;
+    }
+    list.innerHTML = campings.map((c) => {
+      const on = aangemeld.has(c.id);
       return `<div class="flex items-center gap-3 px-5 py-3.5">
         <span class="water-grad relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl">${sparkSafeImg(c.cover, c.naam)}</span>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-semibold text-deep">${c.naam}</p>
-          <p class="text-xs text-faint">${c.plaats}${readByHw ? ` · uitgelezen wk ${week}` : ''}</p>
+          <p class="text-xs text-faint">${c.plaats}</p>
         </div>
-        <span class="chip ${isConn ? 'bg-mist text-brand' : 'bg-line-soft text-faint'}">
-          <span class="h-1.5 w-1.5 rounded-full ${isConn ? 'bg-brand' : 'bg-faint'}"></span>${isConn ? 'Gekoppeld' : 'Niet gekoppeld'}
+        <span class="chip ${on ? 'bg-mist text-brand' : 'bg-line-soft text-faint'}">
+          <span class="h-1.5 w-1.5 rounded-full ${on ? 'bg-brand' : 'bg-faint'}"></span>${on ? 'Aangemeld' : 'Niet aangemeld'}
         </span>
-        <button data-toggle="${c.id}" class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${isConn ? 'border-line text-muted hover:border-high hover:text-high' : 'border-brand-400 text-brand hover:bg-mist'}">
-          ${isConn ? 'Ontkoppel' : 'Koppel'}
+        <button data-toggle="${c.id}" class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${on ? 'border-line text-muted hover:border-high hover:text-high' : 'border-brand-400 text-brand hover:bg-mist'}">
+          ${on ? 'Afmelden' : 'Aanmelden'}
         </button>
       </div>`;
     }).join('');
 
     list.querySelectorAll<HTMLButtonElement>('[data-toggle]').forEach((b) =>
       b.addEventListener('click', () => {
-        const set = getConnected();
+        const set = getAangemeld();
         const id = b.dataset.toggle!;
         set.has(id) ? set.delete(id) : set.add(id);
-        setConnected(set);
+        setAangemeld(set);
+        (window as any).peilToast?.(set.has(id) ? 'Aangemeld voor de koppeling' : 'Afgemeld');
         renderList();
       }),
     );
   }
 
-  document.getElementById('hw-read')!.addEventListener('click', () => {
-    const connected = [...getConnected()];
-    if (!connected.length) {
-      (window as any).peilToast?.('Koppel eerst een camping');
-      return;
-    }
-    let count = 0;
-    for (const id of connected) {
-      const est = estimate(id);
-      addOrUpdateReading({ campingId: id, jaar: year, week, ...est, bron: 'homewizard' });
-      count++;
-    }
-    (window as any).peilToast?.(`HomeWizard las ${count} ${count === 1 ? 'camping' : 'campings'} uit (week ${week})`);
-    renderList();
-  });
-
-  ensureLoaded().then(() => {
-    renderList();
-    window.addEventListener('peil:change', renderList);
-  });
+  ensureLoaded().then(renderList);
 </script>

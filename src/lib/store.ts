@@ -606,7 +606,7 @@ export function updateCamping(id: string, patch: CampingPatch): Camping | undefi
 }
 
 // -----------------------------------------------------------------------------
-// Rol / toegang (demo): 'regio' = beheerder, anders een campingId (eigenaar)
+// Rol / toegang: 'regio' = beheerder, anders een campingId (eigenaar)
 // -----------------------------------------------------------------------------
 
 export type Role = 'regio' | string;
@@ -640,7 +640,7 @@ export function scopedCampings(): Camping[] {
 }
 
 // -----------------------------------------------------------------------------
-// Herinneringen (demo-prefs per camping)
+// Herinneringen (prefs per camping)
 // -----------------------------------------------------------------------------
 
 export interface ReminderPrefs {

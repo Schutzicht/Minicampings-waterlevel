@@ -23,7 +23,7 @@ import AppLayout from '../layouts/AppLayout.astro';
   if (!c) {
     root.innerHTML = `<div class="card grid place-items-center gap-3 p-12 text-center">
       <p class="font-display text-xl font-bold text-ink">Camping niet gevonden</p>
-      <p class="text-sm text-muted">Deze locatie bestaat niet in de demo.</p>
+      <p class="text-sm text-muted">Deze camping bestaat niet of is niet meer beschikbaar.</p>
       <a href="/campings" class="btn btn-primary mt-2 px-4 py-2 text-sm">Naar alle campings</a></div>`;
   } else {
     document.title = `${c.naam} · Peil`;
