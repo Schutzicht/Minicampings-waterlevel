@@ -40,6 +40,14 @@ import DockwizeMark from '../components/DockwizeMark.astro';
                 <span class="mb-1.5 flex items-center justify-between text-sm font-semibold text-deep">Beginstand watermeter <span class="text-xs font-medium text-faint">m³</span></span>
                 <input id="f-meter" type="number" inputmode="decimal" step="0.1" min="0" placeholder="0,0" class="tnum w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-semibold text-ink" />
               </label>
+              <label class="block sm:col-span-2">
+                <span class="mb-1.5 block text-sm font-semibold text-deep">E-mailadres (om in te loggen)</span>
+                <input id="f-email" type="email" required autocomplete="email" placeholder="jij@camping.nl" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
+              </label>
+              <label class="block sm:col-span-2">
+                <span class="mb-1.5 block text-sm font-semibold text-deep">Wachtwoord</span>
+                <input id="f-password" type="password" required autocomplete="new-password" minlength="6" placeholder="Minstens 6 tekens" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
+              </label>
             </div>
 
             <div>
@@ -85,7 +93,7 @@ import DockwizeMark from '../components/DockwizeMark.astro';
     </style>
 
     <script>
-      import { createCamping, setRole } from '../lib/store';
+      import { registerAccount, setRole } from '../lib/store';
       import type { PlaatsType } from '../lib/store';
 
       const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -93,11 +101,22 @@ import DockwizeMark from '../components/DockwizeMark.astro';
       winter.addEventListener('click', () => winter.setAttribute('aria-checked', String(winter.getAttribute('aria-checked') !== 'true')));
 
       const showErr = (m: string) => { const e = $('err'); e.textContent = m; e.classList.remove('hidden'); };
+      const ERR: Record<string, string> = {
+        invalid_email: 'Vul een geldig e-mailadres in.',
+        weak_password: 'Kies een wachtwoord van minstens 6 tekens.',
+        email_taken: 'Er bestaat al een account met dit e-mailadres.',
+        no_name: 'Vul de naam van je camping in.',
+        server: 'Aanmelden mislukt. Probeer het opnieuw.',
+      };
 
       $<HTMLFormElement>('form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const naam = $<HTMLInputElement>('f-naam').value.trim();
         if (!naam) { showErr('Vul de naam van je camping in.'); $('f-naam').focus(); return; }
+        const email = $<HTMLInputElement>('f-email').value.trim();
+        const password = $<HTMLInputElement>('f-password').value;
+        if (!email) { showErr('Vul een e-mailadres in om mee in te loggen.'); $('f-email').focus(); return; }
+        if (password.length < 6) { showErr('Kies een wachtwoord van minstens 6 tekens.'); $('f-password').focus(); return; }
         const sta = parseInt($<HTMLInputElement>('t-staplaats').value || '0', 10);
         const cam = parseInt($<HTMLInputElement>('t-camperplaats').value || '0', 10);
         const cha = parseInt($<HTMLInputElement>('t-chalet').value || '0', 10);
@@ -109,18 +128,20 @@ import DockwizeMark from '../components/DockwizeMark.astro';
 
         const btn = e.submitter as HTMLButtonElement | null;
         if (btn) { btn.disabled = true; btn.textContent = 'Bezig met aanmelden...'; }
-        try {
-          const c = await createCamping({
-            naam,
-            plaats: $<HTMLInputElement>('f-plaats').value.trim(),
-            types,
-            winterkamperen: winter.getAttribute('aria-checked') === 'true',
-            meterStart: parseFloat($<HTMLInputElement>('f-meter').value.replace(',', '.')) || 0,
-          });
-          setRole(c.id);
+        const res = await registerAccount({
+          naam,
+          plaats: $<HTMLInputElement>('f-plaats').value.trim(),
+          types,
+          winterkamperen: winter.getAttribute('aria-checked') === 'true',
+          meterStart: parseFloat($<HTMLInputElement>('f-meter').value.replace(',', '.')) || 0,
+          email,
+          password,
+        });
+        if (res.ok && res.campingId) {
+          setRole(res.campingId);
           location.assign('/dashboard');
-        } catch {
-          showErr('Aanmelden mislukt. Probeer het opnieuw.');
+        } else {
+          showErr(ERR[res.error || 'server'] || ERR.server);
           if (btn) { btn.disabled = false; btn.textContent = 'Camping aanmelden'; }
         }
       });

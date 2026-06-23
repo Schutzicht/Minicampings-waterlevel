@@ -24,22 +24,23 @@ import DockwizeMark from '../components/DockwizeMark.astro';
 
         <div class="card mt-5 p-6 shadow-soft">
           <h1 class="font-display text-xl font-bold tracking-tight text-ink">Inloggen</h1>
-          <p class="mt-1 text-sm text-muted">Kies je account. Je ziet en beheert alleen wat bij jouw rol hoort.</p>
+          <p class="mt-1 text-sm text-muted">Log in op je camping met je e-mailadres en wachtwoord.</p>
 
-          <div class="mt-5 space-y-2">
-            <button data-role="regio" class="account-btn">
-              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-[var(--color-ink)] text-[11px] font-bold text-white">RZ</span>
-              <span class="min-w-0 flex-1 text-left">
-                <span class="block text-sm font-semibold text-ink">Regio Zeeland</span>
-                <span class="block text-xs text-faint">Beheerder · alle campings</span>
-              </span>
-              <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            </button>
+          <form id="loginForm" class="mt-5 space-y-3">
+            <label class="block">
+              <span class="mb-1.5 block text-sm font-semibold text-deep">E-mailadres</span>
+              <input id="l-email" type="email" required autocomplete="email" placeholder="jij@camping.nl" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
+            </label>
+            <label class="block">
+              <span class="mb-1.5 block text-sm font-semibold text-deep">Wachtwoord</span>
+              <input id="l-password" type="password" required autocomplete="current-password" placeholder="Je wachtwoord" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 font-medium text-ink" />
+            </label>
+            <p id="l-err" class="hidden text-sm font-medium text-high"></p>
+            <button type="submit" class="btn btn-primary w-full py-2.5">Inloggen</button>
+          </form>
 
-            <p id="eigLabel" class="hidden px-1 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-faint">Camping-eigenaren</p>
-            <div id="accountList" class="space-y-2"></div>
-
-            <a href="/aanmelden" class="account-btn mt-1">
+          <div class="mt-4 space-y-2 border-t border-line-soft pt-4">
+            <a href="/aanmelden" class="account-btn">
               <span class="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-dashed border-[var(--color-border-strong)] text-[var(--color-ink-2)]">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
               </span>
@@ -49,11 +50,31 @@ import DockwizeMark from '../components/DockwizeMark.astro';
               </span>
               <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
+
+            <button id="claimToggle" type="button" class="w-full px-1 py-1 text-left text-sm font-medium text-ink-2 hover:text-ink">
+              Bestaande camping zonder login? Stel een wachtwoord in
+            </button>
+            <form id="claimForm" class="hidden space-y-3 rounded-[12px] border border-line bg-surface-2 p-4">
+              <label class="block">
+                <span class="mb-1.5 block text-xs font-semibold text-deep">Camping</span>
+                <select id="c-camping" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm font-medium text-ink"></select>
+              </label>
+              <label class="block">
+                <span class="mb-1.5 block text-xs font-semibold text-deep">E-mailadres</span>
+                <input id="c-email" type="email" placeholder="jij@camping.nl" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm font-medium text-ink" />
+              </label>
+              <label class="block">
+                <span class="mb-1.5 block text-xs font-semibold text-deep">Wachtwoord (min. 6 tekens)</span>
+                <input id="c-password" type="password" minlength="6" placeholder="Kies een wachtwoord" class="w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm font-medium text-ink" />
+              </label>
+              <p id="c-err" class="hidden text-sm font-medium text-high"></p>
+              <button type="submit" class="btn btn-primary w-full py-2">Wachtwoord instellen</button>
+            </form>
           </div>
 
-          <p class="mt-5 border-t border-line-soft pt-4 text-xs leading-relaxed text-faint">
-            Een camping-eigenaar ziet en beheert alleen de eigen camping. De regio-beheerder ziet alle aangesloten campings.
-          </p>
+          <div class="mt-4 border-t border-line-soft pt-4">
+            <button data-role="regio" class="w-full text-center text-xs font-semibold text-faint hover:text-ink">Inloggen als regio-beheerder (intern)</button>
+          </div>
         </div>
       </div>
     </div>
@@ -65,35 +86,67 @@ import DockwizeMark from '../components/DockwizeMark.astro';
     </style>
 
     <script>
-      import { ensureLoaded, getCampings, setRole } from '../lib/store';
+      import { ensureLoaded, getCampings, setRole, loginAccount, claimCamping } from '../lib/store';
 
-      const short = (n: string) => n.replace('Minicamping ', '').replace('Boerderijcamping ', '');
-      const mono = (n: string) => short(n).replace("'t ", '').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+      const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+      const ERR: Record<string, string> = {
+        no_account: 'Geen account met dit e-mailadres gevonden.',
+        wrong_password: 'Wachtwoord onjuist.',
+        invalid_email: 'Vul een geldig e-mailadres in.',
+        weak_password: 'Kies een wachtwoord van minstens 6 tekens.',
+        email_taken: 'Er bestaat al een account met dit e-mailadres.',
+        already_has_account: 'Deze camping heeft al een login.',
+        no_camping: 'Kies een camping.',
+        server: 'Er ging iets mis. Probeer het opnieuw.',
+      };
+      const go = (role: string) => { setRole(role); location.assign('/dashboard'); };
 
-      function go(role: string) {
-        setRole(role);
-        location.assign('/dashboard');
-      }
+      // Inloggen
+      $<HTMLFormElement>('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const err = $('l-err'); err.classList.add('hidden');
+        const email = $<HTMLInputElement>('l-email').value.trim();
+        const password = $<HTMLInputElement>('l-password').value;
+        const btn = e.submitter as HTMLButtonElement | null;
+        if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
+        const res = await loginAccount(email, password);
+        if (res.ok) { go(res.role === 'regio' ? 'regio' : res.campingId!); return; }
+        err.textContent = ERR[res.error || 'server'] || ERR.server; err.classList.remove('hidden');
+        if (btn) { btn.disabled = false; btn.textContent = 'Inloggen'; }
+      });
 
+      // Regio-beheerder (intern)
       document.querySelector<HTMLButtonElement>('[data-role="regio"]')!.addEventListener('click', () => go('regio'));
 
-      ensureLoaded().then(() => {
-        const campings = getCampings();
-        const list = document.getElementById('accountList')!;
-        if (campings.length) {
-          document.getElementById('eigLabel')!.classList.remove('hidden');
-          list.innerHTML = campings.map((c) => `
-            <button data-role="${c.id}" class="account-btn">
-              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-[var(--color-accent-soft)] text-[11px] font-bold text-ink">${mono(c.naam)}</span>
-              <span class="min-w-0 flex-1 text-left">
-                <span class="block truncate text-sm font-semibold text-ink">${short(c.naam)}</span>
-                <span class="block text-xs text-faint">Eigenaar · ${c.plaats || 'camping'}</span>
-              </span>
-              <svg class="h-4 w-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            </button>`).join('');
-          list.querySelectorAll<HTMLButtonElement>('[data-role]').forEach((b) => b.addEventListener('click', () => go(b.dataset.role!)));
+      // Claim: bestaande camping een wachtwoord geven
+      const claimForm = $('claimForm');
+      $('claimToggle').addEventListener('click', async () => {
+        claimForm.classList.toggle('hidden');
+        if (!claimForm.classList.contains('hidden')) {
+          await ensureLoaded();
+          const sel = $<HTMLSelectElement>('c-camping');
+          const campings = getCampings();
+          sel.innerHTML = campings.length
+            ? campings.map((c) => `<option value="${c.id}">${c.naam}${c.plaats ? ' · ' + c.plaats : ''}</option>`).join('')
+            : '<option value="">Geen campings gevonden</option>';
         }
       });
+      claimForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const err = $('c-err'); err.classList.add('hidden');
+        const camping = $<HTMLSelectElement>('c-camping').value;
+        const email = $<HTMLInputElement>('c-email').value.trim();
+        const password = $<HTMLInputElement>('c-password').value;
+        if (!camping) { err.textContent = ERR.no_camping; err.classList.remove('hidden'); return; }
+        const btn = (e.submitter as HTMLButtonElement | null);
+        if (btn) { btn.disabled = true; btn.textContent = 'Bezig...'; }
+        const res = await claimCamping(camping, email, password);
+        if (res.ok) { go(res.campingId!); return; }
+        err.textContent = ERR[res.error || 'server'] || ERR.server; err.classList.remove('hidden');
+        if (btn) { btn.disabled = false; btn.textContent = 'Wachtwoord instellen'; }
+      });
+
+      ensureLoaded();
     </script>
   </body>
 </html>

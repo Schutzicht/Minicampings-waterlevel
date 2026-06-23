@@ -238,6 +238,55 @@ export async function createCamping(input: NewCampingInput): Promise<Camping> {
 }
 
 // -----------------------------------------------------------------------------
+// Accounts / login (Supabase RPC; wachtwoorden als bcrypt, server-side)
+// -----------------------------------------------------------------------------
+
+export interface AccountResult {
+  ok: boolean;
+  campingId?: string;
+  role?: string;
+  error?: string;
+}
+
+export async function registerAccount(input: NewCampingInput & { email: string; password: string }): Promise<AccountResult> {
+  try {
+    const { data, error } = await sb.rpc('peil_register', {
+      p_email: input.email,
+      p_password: input.password,
+      p_naam: input.naam,
+      p_plaats: input.plaats,
+      p_types: input.types,
+      p_winter: input.winterkamperen,
+      p_meterstart: input.meterStart,
+    });
+    if (error) return { ok: false, error: 'server' };
+    return data as AccountResult;
+  } catch {
+    return { ok: false, error: 'server' };
+  }
+}
+
+export async function loginAccount(email: string, password: string): Promise<AccountResult> {
+  try {
+    const { data, error } = await sb.rpc('peil_login', { p_email: email, p_password: password });
+    if (error) return { ok: false, error: 'server' };
+    return data as AccountResult;
+  } catch {
+    return { ok: false, error: 'server' };
+  }
+}
+
+export async function claimCamping(campingId: string, email: string, password: string): Promise<AccountResult> {
+  try {
+    const { data, error } = await sb.rpc('peil_claim', { p_camping: campingId, p_email: email, p_password: password });
+    if (error) return { ok: false, error: 'server' };
+    return data as AccountResult;
+  } catch {
+    return { ok: false, error: 'server' };
+  }
+}
+
+// -----------------------------------------------------------------------------
 // Queries
 // -----------------------------------------------------------------------------
 
