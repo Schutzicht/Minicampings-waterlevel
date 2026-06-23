@@ -26,16 +26,16 @@ const functies = [
 
 const fases = [
   { n: '1', t: 'Data ophalen', d: 'Elke deelnemende camping legt wekelijks het waterverbruik vast. Samen bouwen we een eerlijk beeld van de regio. Hier staan we nu.' },
-  { n: '2', t: 'Onderzoek naar een collectief', d: 'Met die inzichten onderzoeken we een gezamenlijke aanpak en delen we de uitkomsten met partijen die ons hierin kunnen ondersteunen.' },
-  { n: '3', t: 'Waar het wringt en waar kansen liggen', d: 'Het geeft een helder startpunt: waar loopt het vast en waar valt winst te halen, voor jou en voor de regio.' },
+  { n: '2', t: 'Waar het wringt en waar kansen liggen', d: 'Het geeft een helder startpunt: waar loopt het vast en waar valt winst te halen, voor jou en voor de regio.' },
+  { n: '3', t: 'Onderzoek naar een collectief', d: 'Met die inzichten onderzoeken we een gezamenlijke aanpak en delen we de uitkomsten met partijen die ons hierin kunnen ondersteunen.' },
 ];
 
 const dataPunten = [
+  'We gebruiken je cijfers om samen een beeld van de regio te vormen en onderzoek te doen naar een collectief voor de watertransitie.',
+  'Inzichten delen we op groepsniveau met partijen die de campings kunnen helpen met kosten- en waterbesparende maatregelen. We verkopen je gegevens niet.',
+  'In het overzicht leggen we de campings naast elkaar, zodat je van elkaar kunt leren en ziet waar kansen liggen. Bedoeld om samen te verbeteren, niet om elkaar te beoordelen.',
   'Je vult alleen je waterstand, het aantal bezoekers en de bezetting in. Geen gegevens van je gasten.',
-  'Je eigen cijfers blijven van jou. Op je dashboard zie je alleen je eigen camping.',
-  'Voor het onderzoek kijken we naar het totaalbeeld van de regio, niet om losse campings af te rekenen.',
-  'We delen inzichten op groepsniveau met partijen die de campings verder kunnen helpen. We verkopen je gegevens niet.',
-  'Meedoen is vrijwillig. Je kunt altijd stoppen en je gegevens laten verwijderen.',
+  'Je gegevens blijven van jou. Meedoen is vrijwillig en je kunt altijd stoppen en je gegevens laten verwijderen.',
 ];
 ---
 <SiteLayout>
@@ -139,8 +139,9 @@ const dataPunten = [
       <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand">Samen</p>
       <h2 class="fluid-h2 mt-2 font-semibold text-ink">Waarom we dit samen doen</h2>
       <p class="mt-3 text-[0.98rem] leading-relaxed text-muted">
-        Peil is een initiatief van WaterWijs, een programma van Dockwize. We staan nu samen met de minicampings
-        in de fase van data ophalen. Hoe meer campings meedoen, hoe scherper het beeld voor iedereen.
+        WaterWijs helpt minicampings mee in de watertransitie. Door samen een collectief te vormen maken we
+        kosten- en waterbesparende maatregelen ook voor kleine campings haalbaar en betaalbaar. Peil is de
+        eerste stap: samen helder krijgen hoe het water stroomt.
       </p>
     </div>
     <div class="mt-10 grid gap-8 lg:grid-cols-2 lg:gap-12">
