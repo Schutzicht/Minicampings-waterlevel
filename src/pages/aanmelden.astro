@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import Logo from '../components/Logo.astro';
 import DockwizeMark from '../components/DockwizeMark.astro';
+import Analytics from '@vercel/analytics/astro';
 ---
 <!doctype html>
 <html lang="nl" class="h-full">
@@ -147,5 +148,6 @@ import DockwizeMark from '../components/DockwizeMark.astro';
         }
       });
     </script>
+    <Analytics />
   </body>
 </html>

@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import Logo from '../components/Logo.astro';
 import DockwizeMark from '../components/DockwizeMark.astro';
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title?: string;
@@ -114,5 +115,6 @@ const links = [
         border-bottom: 1px solid var(--color-line);
       }
     </style>
+    <Analytics />
   </body>
 </html>

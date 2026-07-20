@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar.astro';
 import Topbar from '../components/Topbar.astro';
 import Icon from '../components/Icon.astro';
 import DemoTour from '../components/DemoTour.astro';
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title: string;
@@ -144,5 +145,6 @@ const mobileNav = [
         }, 2600);
       };
     </script>
+    <Analytics />
   </body>
 </html>
