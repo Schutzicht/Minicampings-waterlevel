@@ -1,0 +1,26 @@
+name: Supabase keep-alive
+
+# Houdt het Supabase-project (Peil) wakker, zodat het niet automatisch in de
+# slaapstand gaat op de gratis tier. Een dagelijkse lichte read reset de
+# inactiviteits-timer van Supabase. Draait op GitHub, los van laptop/sessie.
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # elke dag 06:00 UTC
+  workflow_dispatch: {} # ook handmatig te starten
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tik de database aan
+        run: |
+          code=$(curl -sS --max-time 30 -o /dev/null -w "%{http_code}" \
+            "https://izorxyllmvszabnrukgg.supabase.co/rest/v1/campings?select=id&limit=1" \
+            -H "apikey: sb_publishable_jhuPEfI6bbNSfOY3T8_4Ag_WLZwpWFg" \
+            -H "Authorization: Bearer sb_publishable_jhuPEfI6bbNSfOY3T8_4Ag_WLZwpWFg")
+          echo "Supabase antwoordde met HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "Onverwachte status, mogelijk gepauzeerd. Herstel via Supabase-dashboard." >&2
+            exit 1
+          fi
